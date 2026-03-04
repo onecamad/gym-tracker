@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="manifest" href="./manifest.json" />
+  <title>Gym Tracker (Offline)</title>
+
+  <style>
+    :root{
+      --bg:#050505;
+      --panel:#0b0b0b;
+      --panel2:#101010;
+      --border:#1f1f1f;
+      --text:#f4f4f5;
+      --muted:#a1a1aa;
+      --accent:#34d399; /* emerald */
+      --accent2:#22d3ee; /* cyan */
+      --danger:#fb7185;
+      --shadow: 0 12px 30px rgba(0,0,0,.45);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:linear-gradient(180deg, #050505 0%, #070707 100%);
+      color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .wrap{max-width:520px;margin:0 auto;padding-bottom:96px}
+    header{
+      position:sticky;top:0;z-index:20;
+      backdrop-filter: blur(10px);
+      background: rgba(5,5,5,.78);
+      border-bottom:1px solid var(--border);
+    }
+    .head{padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .title{line-height:1.1}
+    .title h1{margin:0;font-size:18px;font-weight:700;letter-spacing:-.2px}
+    .title p{margin:4px 0 0;color:var(--muted);font-size:12px}
+    .pill{
+      font-size:12px;color:#d4d4d8;
+      border:1px solid var(--border);
+      background:rgba(16,16,16,.6);
+      padding:8px 10px;border-radius:999px;
+      display:flex;gap:6px;align-items:center;
+      white-space:nowrap;
+    }
+    .tabs{padding:0 16px 14px}
+    .tabsbar{
+      display:grid;grid-template-columns:repeat(3,1fr);
+      gap:6px;
+      padding:6px;border:1px solid var(--border);
+      border-radius:999px;background:rgba(16,16,16,.65);
+    }
+    .tabbtn{
+      border:0;background:transparent;color:#cbd5e1;
+      padding:10px 10px;border-radius:999px;
+      font-weight:700;font-size:13px;
+    }
+    .tabbtn.active{
+      background: rgba(52,211,153,.14);
+      border:1px solid rgba(52,211,153,.22);
+      color: #b7f7d8;
+    }
+    main{padding:16px;display:flex;flex-direction:column;gap:14px}
+    .card{
+      background:rgba(11,11,11,.95);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow: var(--shadow);
+    }
+    .card.flat{box-shadow:none;background:rgba(11,11,11,.7)}
+    .row{display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .sub{font-size:12px;color:var(--muted)}
+    .h2{font-size:14px;font-weight:800;margin:0}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    label{display:block}
+    input, select, textarea{
+      width:100%;
+      border:1px solid var(--border);
+      background:rgba(16,16,16,.9);
+      color:var(--text);
+      border-radius:14px;
+      padding:12px 12px;
+      outline:none;
+      font-size:14px;
+    }
+    textarea{resize:vertical;min-height:86px}
+    .mini{font-size:11px;color:var(--muted);margin-top:6px}
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(16,16,16,.9);
+      color:var(--text);
+      padding:10px 12px;border-radius:14px;
+      font-weight:800;font-size:13px;
+    }
+    .btn.accent{
+      background: var(--accent);
+      border-color: rgba(0,0,0,.2);
+      color:#04140d;
+    }
+    .btn.soft{
+      background: rgba(34,211,238,.12);
+      border-color: rgba(34,211,238,.22);
+      color:#bff7ff;
+    }
+    .btn.danger{
+      background: rgba(251,113,133,.12);
+      border-color: rgba(251,113,133,.22);
+      color:#ffd0d8;
+    }
+    .list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .item{
+      background:rgba(16,16,16,.65);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:12px;
+    }
+    .itemTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .itemName{font-weight:900;font-size:14px;margin:0;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .prev{font-size:12px;color:var(--muted);margin-top:4px}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+    .mutebox{color:var(--muted)}
+    .hidden{display:none !important}
+    .bar{
+      position:fixed;left:0;right:0;bottom:0;z-index:30;
+      background: rgba(5,5,5,.78);
+      backdrop-filter: blur(10px);
+      border-top:1px solid var(--border);
+    }
+    .barInner{max-width:520px;margin:0 auto;padding:12px 16px}
+    .barCard{
+      background: rgba(11,11,11,.92);
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:12px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      box-shadow: var(--shadow);
+    }
+    .toast{
+      position:fixed;left:50%;transform:translateX(-50%);
+      bottom:92px;z-index:40;
+      background: rgba(15,15,15,.95);
+      border:1px solid rgba(52,211,153,.22);
+      padding:12px 14px;border-radius:16px;
+      display:none;box-shadow: var(--shadow);
+      font-size:13px;
+    }
+    .toast.show{display:block}
+    .dot{width:10px;height:10px;border-radius:999px;background:var(--accent);display:inline-block;margin-right:8px}
+    .overlay{
+      position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+      background: rgba(0,0,0,.55);
+      z-index:50;
+    }
+    .overlay.show{display:flex}
+    .spinner{
+      width:18px;height:18px;border:2px solid #9ca3af;border-top-color:transparent;border-radius:999px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:11px;color:#d4d4d8}
+  </style>
+</head>
+
+<body>
+  <div class="overlay" id="overlay">
+    <div class="card" style="display:flex;gap:10px;align-items:center">
+      <div class="spinner"></div>
+      <div style="font-weight:800">Processando...</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><span class="dot"></span><span id="toastText">Salvo!</span></div>
+
+  <div class="wrap">
+    <header>
+      <div class="head">
+        <div class="title">
+          <h1>Gym Tracker</h1>
+          <p>Offline • Simples • Mobile</p>
+        </div>
+        <div class="pill">
+          <span class="mutebox">Data:</span>
+          <span id="datePretty">—</span>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tabsbar">
+          <button class="tabbtn active" data-tab="today">Hoje</button>
+          <button class="tabbtn" data-tab="workout">Treino</button>
+          <button class="tabbtn" data-tab="backup">Backup</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- HOJE -->
+      <section id="tab-today" class="">
+        <div class="card flat">
+          <div class="row">
+            <div>
+              <div class="h2">Resumo do dia</div>
+              <div class="sub">Peso, água e protocolo</div>
+            </div>
+            <input id="dateInput" type="date" style="max-width:170px" />
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="grid2">
+            <label>
+              <div class="sub">Peso (kg)</div>
+              <input id="bioWeight" inputmode="decimal" placeholder="Ex: 78.4" />
+            </label>
+            <label>
+              <div class="sub">Água (ml ou copos)</div>
+              <input id="bioWater" inputmode="numeric" placeholder="Ex: 2500" />
+            </label>
+          </div>
+
+          <div style="margin-top:10px">
+            <label>
+              <div class="sub">Protocolo</div>
+              <select id="bioProtocol">
+                <option value="Puro">Puro</option>
+                <option value="Ciclo">Ciclo</option>
+                <option value="Cafeína">Cafeína</option>
+                <option value="Creatina">Creatina</option>
+                <option value="Outro">Outro</option>
+              </select>
+              <div class="mini">Apenas registro. Sem recomendações.</div>
+            </label>
+          </div>
+
+          <div style="margin-top:10px">
+            <label>
+              <div class="sub">Observações</div>
+              <textarea id="bioNotes" placeholder="Sono, dor, humor, pump..."></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div class="card flat">
+          <div class="row">
+            <div>
+              <div class="h2">Treino do dia</div>
+              <div class="sub">Abra a aba “Treino” para registrar.</div>
+            </div>
+            <button class="btn soft" id="goWorkout">Ir →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TREINO -->
+      <section id="tab-workout" class="hidden">
+        <div class="card flat">
+          <div class="row">
+            <div>
+              <div class="h2">Exercícios</div>
+              <div class="sub">Carga • reps • séries + semana anterior</div>
+            </div>
+            <button class="btn soft" id="addExerciseBtn">+ Exercício</button>
+          </div>
+          <div class="mini">“Semana anterior” = data selecionada − 7 dias (máxima carga do dia).</div>
+        </div>
+
+        <div class="card" id="workoutListCard">
+          <div id="workoutEmpty" class="sub">Sem exercícios ainda. Toque em <span class="kbd">+ Exercício</span>.</div>
+          <div class="list" id="workoutList"></div>
+        </div>
+      </section>
+
+      <!-- BACKUP -->
+      <section id="tab-backup" class="hidden">
+        <div class="card">
+          <div class="h2">Exportar CSV</div>
+          <div class="sub">Para importar no Google Sheets depois.</div>
+          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn accent" id="exportTreinos">Exportar Log_Treinos</button>
+            <button class="btn accent" id="exportBio">Exportar Log_Bio</button>
+          </div>
+          <div class="mini">Dica: no Sheets → Arquivo → Importar → Enviar → escolher o CSV.</div>
+        </div>
+
+        <div class="card">
+          <div class="h2">Importar CSV (opcional)</div>
+          <div class="sub">Recuperar backup no aparelho.</div>
+          <div style="margin-top:12px">
+            <label>
+              <div class="sub">Importar Log_Treinos CSV</div>
+              <input type="file" id="importTreinos" accept=".csv,text/csv" />
+            </label>
+          </div>
+          <div style="margin-top:12px">
+            <label>
+              <div class="sub">Importar Log_Bio CSV</div>
+              <input type="file" id="importBio" accept=".csv,text/csv" />
+            </label>
+          </div>
+          <div class="mini">Import substitui/mescla dados por data. Faça export antes por segurança.</div>
+        </div>
+
+        <div class="card">
+          <div class="h2">Limpar tudo</div>
+          <div class="sub">Remove os dados salvos no aparelho.</div>
+          <div style="margin-top:12px">
+            <button class="btn danger" id="wipeAll">Apagar dados locais</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="bar">
+    <div class="barInner">
+      <div class="barCard">
+        <div>
+          <div style="font-weight:900">SALVAR</div>
+          <div class="sub" id="saveHint">Dados de —</div>
+        </div>
+        <button class="btn accent" id="saveBtn" style="padding:14px 16px;border-radius:18px">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/** ============================
+ *  Dados locais (offline)
+ *  ============================
+ * Armazena em localStorage:
+ * {
+ *   version: 1,
+ *   bioByDate: { "yyyy-mm-dd": {weight, water, protocol, notes} },
+ *   workoutsByDate: { "yyyy-mm-dd": [ {exercise, load, reps, sets}, ... ] }
+ * }
+ */
+const STORAGE_KEY = "gym_tracker_offline_v1";
+
+const $ = (id) => document.getElementById(id);
+
+const state = {
+  tab: "today",
+  dateISO: toISO(new Date()),
+  db: loadDB(),
+};
+
+function showOverlay(on){ $("overlay").classList.toggle("show", !!on); }
+function toast(msg){
+  $("toastText").textContent = msg;
+  $("toast").classList.add("show");
+  setTimeout(()=> $("toast").classList.remove("show"), 1800);
+}
+
+function toISO(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function isoPretty(iso){
+  if(!iso) return "—";
+  const [y,m,d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+function addDays(iso, days){
+  const d = new Date(iso + "T00:00:00");
+  d.setDate(d.getDate()+days);
+  return toISO(d);
+}
+function numOrEmpty(v){
+  if(v === "" || v === null || typeof v === "undefined") return "";
+  const n = Number(v);
+  return Number.isFinite(n) ? n : "";
+}
+function sanitizeText(v){ return (v ?? "").toString(); }
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return { version: 1, bioByDate:{}, workoutsByDate:{} };
+    const obj = JSON.parse(raw);
+    return {
+      version: 1,
+      bioByDate: obj.bioByDate || {},
+      workoutsByDate: obj.workoutsByDate || {},
+    };
+  }catch{
+    return { version: 1, bioByDate:{}, workoutsByDate:{} };
+  }
+}
+function saveDB(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.db));
+}
+
+function setTab(tab){
+  state.tab = tab;
+  document.querySelectorAll(".tabbtn").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.tab === tab);
+  });
+  ["today","workout","backup"].forEach(t=>{
+    $(`tab-${t}`).classList.toggle("hidden", t !== tab);
+  });
+}
+
+function renderHeader(){
+  $("datePretty").textContent = isoPretty(state.dateISO);
+  $("dateInput").value = state.dateISO;
+  $("saveHint").textContent = `Dados de ${isoPretty(state.dateISO)}`;
+}
+
+function renderBio(){
+  const bio = state.db.bioByDate[state.dateISO] || {};
+  $("bioWeight").value = bio.weight ?? "";
+  $("bioWater").value = bio.water ?? "";
+  $("bioProtocol").value = bio.protocol || "Puro";
+  $("bioNotes").value = bio.notes || "";
+}
+
+function getPrevWeekMaxLoadMap(dateISO){
+  const prevISO = addDays(dateISO, -7);
+  const arr = state.db.workoutsByDate[prevISO] || [];
+  const map = {};
+  for(const w of arr){
+    const ex = (w.exercise || "").trim();
+    const load = Number(w.load);
+    if(!ex || !Number.isFinite(load)) continue;
+    if(map[ex] === undefined || load > map[ex]) map[ex] = load;
+  }
+  return { prevISO, map };
+}
+
+function renderWorkout(){
+  const list = $("workoutList");
+  list.innerHTML = "";
+
+  const workouts = state.db.workoutsByDate[state.dateISO] || [];
+  $("workoutEmpty").classList.toggle("hidden", workouts.length > 0);
+
+  const { prevISO, map } = getPrevWeekMaxLoadMap(state.dateISO);
+
+  workouts.forEach((w, idx)=>{
+    const ex = sanitizeText(w.exercise).trim() || "Exercício";
+    const prevLoad = (map[ex] === undefined) ? null : map[ex];
+
+    const el = document.createElement("div");
+    el.className = "item";
+    el.innerHTML = `
+      <div class="itemTop">
+        <div>
+          <p class="itemName" title="${escapeHtml(ex)}">${escapeHtml(ex)}</p>
+          <div class="prev">Semana anterior (${isoPretty(prevISO)}): <b>${prevLoad === null ? "—" : (prevLoad + " kg")}</b></div>
+        </div>
+        <button class="btn danger" data-action="remove" data-idx="${idx}" style="padding:8px 10px">Remover</button>
+      </div>
+
+      <div class="grid3">
+        <label>
+          <div class="sub">Carga (kg)</div>
+          <input inputmode="decimal" data-field="load" data-idx="${idx}" value="${w.load ?? ""}" placeholder="0" />
+        </label>
+        <label>
+          <div class="sub">Reps</div>
+          <input inputmode="numeric" data-field="reps" data-idx="${idx}" value="${w.reps ?? ""}" placeholder="0" />
+        </label>
+        <label>
+          <div class="sub">Séries</div>
+          <input inputmode="numeric" data-field="sets" data-idx="${idx}" value="${w.sets ?? ""}" placeholder="0" />
+        </label>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+
+  // binds remove + inputs
+  list.querySelectorAll('button[data-action="remove"]').forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const i = Number(btn.dataset.idx);
+      const arr = state.db.workoutsByDate[state.dateISO] || [];
+      arr.splice(i,1);
+      state.db.workoutsByDate[state.dateISO] = arr;
+      saveDB();
+      renderWorkout();
+      toast("Removido (salvo local).");
+    });
+  });
+
+  list.querySelectorAll("input[data-field]").forEach(inp=>{
+    inp.addEventListener("input", ()=>{
+      const idx = Number(inp.dataset.idx);
+      const field = inp.dataset.field;
+      const arr = state.db.workoutsByDate[state.dateISO] || [];
+      if(!arr[idx]) return;
+      arr[idx][field] = numOrEmpty(inp.value);
+      state.db.workoutsByDate[state.dateISO] = arr;
+      saveDB();
+    });
+  });
+}
+
+function collectAndSave(){
+  showOverlay(true);
+  try{
+    // BIO
+    state.db.bioByDate[state.dateISO] = {
+      weight: numOrEmpty($("bioWeight").value),
+      water: numOrEmpty($("bioWater").value),
+      protocol: sanitizeText($("bioProtocol").value || "Puro"),
+      notes: sanitizeText($("bioNotes").value || ""),
+    };
+
+    // WORKOUTS já são salvos live ao digitar, mas garantimos estrutura
+    if(!Array.isArray(state.db.workoutsByDate[state.dateISO])){
+      state.db.workoutsByDate[state.dateISO] = [];
+    }
+
+    saveDB();
+    toast("Salvo!");
+  } finally {
+    setTimeout(()=> showOverlay(false), 250);
+  }
+}
+
+function addExercise(){
+  const name = prompt("Nome do exercício (ex: Supino Reto):");
+  if(!name) return;
+  const ex = name.trim();
+  if(!ex) return;
+
+  const arr = state.db.workoutsByDate[state.dateISO] || [];
+  arr.push({ exercise: ex, load: "", reps: "", sets: "" });
+  state.db.workoutsByDate[state.dateISO] = arr;
+  saveDB();
+  renderWorkout();
+  toast("Exercício adicionado.");
+}
+
+function csvEscape(v){
+  const s = (v ?? "").toString();
+  if(/[",\n;]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+  return s;
+}
+
+function downloadText(filename, text){
+  const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportTreinosCSV(){
+  // Log_Treinos: Data, Exercício, Carga, Repetições, Séries
+  const rows = [["Data","Exercício","Carga","Repetições","Séries"]];
+  const dates = Object.keys(state.db.workoutsByDate).sort();
+  dates.forEach(dateISO=>{
+    const arr = state.db.workoutsByDate[dateISO] || [];
+    arr.forEach(w=>{
+      rows.push([
+        dateISO,
+        sanitizeText(w.exercise),
+        w.load ?? "",
+        w.reps ?? "",
+        w.sets ?? "",
+      ]);
+    });
+  });
+
+  // separador ; é mais amigável no Excel/pt-BR
+  const csv = rows.map(r => r.map(csvEscape).join(";")).join("\n");
+  downloadText(`Log_Treinos_${toISO(new Date())}.csv`, csv);
+  toast("CSV de treinos exportado!");
+}
+
+function exportBioCSV(){
+  // Log_Bio: Data, Peso Corporal, Água, Protocolo/Substância, Observações
+  const rows = [["Data","Peso Corporal","Água","Protocolo/Substância","Observações"]];
+  const dates = Object.keys(state.db.bioByDate).sort();
+  dates.forEach(dateISO=>{
+    const b = state.db.bioByDate[dateISO] || {};
+    rows.push([
+      dateISO,
+      b.weight ?? "",
+      b.water ?? "",
+      sanitizeText(b.protocol),
+      sanitizeText(b.notes),
+    ]);
+  });
+
+  const csv = rows.map(r => r.map(csvEscape).join(";")).join("\n");
+  downloadText(`Log_Bio_${toISO(new Date())}.csv`, csv);
+  toast("CSV de bio exportado!");
+}
+
+function parseCSV(text){
+  // parser simples para CSV com ; e aspas (suficiente para nosso backup)
+  const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+  const out = [];
+  for(const line of lines){
+    const row = [];
+    let cur = "", inQ = false;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === '"'){
+        if(inQ && line[i+1] === '"'){ cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if(ch === ";" && !inQ){
+        row.push(cur); cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    row.push(cur);
+    out.push(row);
+  }
+  return out;
+}
+
+function importTreinosCSVFile(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const rows = parseCSV(reader.result);
+      const header = rows.shift() || [];
+      // esperamos: Data, Exercício, Carga, Repetições, Séries
+      const idxDate = header.indexOf("Data");
+      const idxEx = header.indexOf("Exercício");
+      const idxLoad = header.indexOf("Carga");
+      const idxReps = header.indexOf("Repetições");
+      const idxSets = header.indexOf("Séries");
+
+      if(idxDate < 0 || idxEx < 0) throw new Error("CSV inválido (cabeçalho).");
+
+      const map = {}; // date -> array
+      for(const r of rows){
+        const dateISO = (r[idxDate] || "").trim();
+        const ex = (r[idxEx] || "").trim();
+        if(!dateISO || !ex) continue;
+        if(!map[dateISO]) map[dateISO] = [];
+        map[dateISO].push({
+          exercise: ex,
+          load: numOrEmpty(r[idxLoad]),
+          reps: numOrEmpty(r[idxReps]),
+          sets: numOrEmpty(r[idxSets]),
+        });
+      }
+
+      // mescla
+      Object.keys(map).forEach(d=>{
+        state.db.workoutsByDate[d] = map[d];
+      });
+      saveDB();
+      renderWorkout();
+      toast("Treinos importados!");
+    } catch(e){
+      toast("Falha ao importar treinos: " + (e.message || e));
+    }
+  };
+  reader.readAsText(file, "utf-8");
+}
+
+function importBioCSVFile(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const rows = parseCSV(reader.result);
+      const header = rows.shift() || [];
+      // Data, Peso Corporal, Água, Protocolo/Substância, Observações
+      const idxDate = header.indexOf("Data");
+      const idxW = header.indexOf("Peso Corporal");
+      const idxWater = header.indexOf("Água");
+      const idxProt = header.indexOf("Protocolo/Substância");
+      const idxNotes = header.indexOf("Observações");
+
+      if(idxDate < 0) throw new Error("CSV inválido (cabeçalho).");
+
+      for(const r of rows){
+        const dateISO = (r[idxDate] || "").trim();
+        if(!dateISO) continue;
+        state.db.bioByDate[dateISO] = {
+          weight: numOrEmpty(r[idxW]),
+          water: numOrEmpty(r[idxWater]),
+          protocol: sanitizeText(r[idxProt] || "Puro"),
+          notes: sanitizeText(r[idxNotes] || ""),
+        };
+      }
+      saveDB();
+      renderBio();
+      toast("Bio importado!");
+    } catch(e){
+      toast("Falha ao importar bio: " + (e.message || e));
+    }
+  };
+  reader.readAsText(file, "utf-8");
+}
+
+function wipeAll(){
+  const ok = confirm("Tem certeza? Isso apaga tudo salvo no aparelho.");
+  if(!ok) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state.db = loadDB();
+  renderBio();
+  renderWorkout();
+  toast("Dados apagados.");
+}
+
+function escapeHtml(str){
+  return (str ?? "").toString()
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/** ============================
+ *  Eventos
+ *  ============================
+ */
+document.querySelectorAll(".tabbtn").forEach(btn=>{
+  btn.addEventListener("click", ()=> setTab(btn.dataset.tab));
+});
+
+$("dateInput").addEventListener("change", ()=>{
+  const iso = $("dateInput").value;
+  if(!iso) return;
+  state.dateISO = iso;
+  renderHeader();
+  renderBio();
+  renderWorkout();
+});
+
+$("saveBtn").addEventListener("click", collectAndSave);
+
+$("addExerciseBtn").addEventListener("click", addExercise);
+$("goWorkout").addEventListener("click", ()=> setTab("workout"));
+
+$("exportTreinos").addEventListener("click", exportTreinosCSV);
+$("exportBio").addEventListener("click", exportBioCSV);
+
+$("importTreinos").addEventListener("change", (e)=>{
+  const file = e.target.files?.[0];
+  if(file) importTreinosCSVFile(file);
+  e.target.value = "";
+});
+$("importBio").addEventListener("change", (e)=>{
+  const file = e.target.files?.[0];
+  if(file) importBioCSVFile(file);
+  e.target.value = "";
+});
+
+$("wipeAll").addEventListener("click", wipeAll);
+
+// Salvar automático leve ao sair de campos Bio (pra não perder)
+["bioWeight","bioWater","bioProtocol","bioNotes"].forEach(id=>{
+  $(id).addEventListener("blur", ()=> {
+    // salva silencioso
+    state.db.bioByDate[state.dateISO] = {
+      weight: numOrEmpty($("bioWeight").value),
+      water: numOrEmpty($("bioWater").value),
+      protocol: sanitizeText($("bioProtocol").value || "Puro"),
+      notes: sanitizeText($("bioNotes").value || ""),
+    };
+    saveDB();
+  });
+});
+
+/** ============================
+ *  PWA: Service Worker
+ *  ============================
+ */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
+
+/** ============================
+ *  Init
+ *  ============================
+ */
+(function init(){
+  renderHeader();
+  renderBio();
+  renderWorkout();
+})();
+</script>
+</body>
+</html>
