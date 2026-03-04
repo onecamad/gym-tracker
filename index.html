@@ -262,6 +262,19 @@
       font-weight: 800; font-size: 14px;
       max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+
+    .suggestion-badge {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 500;
+      color: #0a1500;
+      background: var(--accent);
+      border-radius: 999px;
+      padding: 2px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      opacity: .85;
+    }
     .prev {
       font-size: 11px; color: var(--muted); margin-top: 3px;
       font-family: var(--font-mono);
@@ -471,6 +484,40 @@
     /* ── Divider ── */
     .divider { height: 1px; background: var(--border); margin: 12px 0; }
 
+    /* ── Templates ── */
+    .template-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-top: 12px;
+    }
+    .template-btn {
+      border: 1px solid var(--border2);
+      background: rgba(10,10,10,.7);
+      border-radius: 16px;
+      padding: 12px 10px;
+      cursor: pointer;
+      text-align: left;
+      transition: all .15s;
+    }
+    .template-btn:hover {
+      border-color: rgba(200,245,102,.35);
+      background: rgba(200,245,102,.05);
+      transform: translateY(-1px);
+    }
+    .template-btn .t-label {
+      font-family: var(--font-head);
+      font-weight: 800; font-size: 15px;
+      color: var(--accent);
+    }
+    .template-btn .t-name {
+      font-size: 11px; color: var(--text);
+      margin-top: 2px; font-weight: 600;
+    }
+    .template-btn .t-count {
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--muted);
+      margin-top: 4px;
+    }
+
     /* ── Empty state ── */
     .empty-state {
       text-align: center; padding: 24px 16px;
@@ -609,6 +656,39 @@
             <button class="btn accent" id="addExerciseBtn">+ Add</button>
           </div>
           <div class="mini">A coluna "semana anterior" usa a data selecionada − 7 dias.</div>
+        </div>
+
+        <!-- Card de templates -->
+        <div class="card">
+          <div class="row">
+            <div>
+              <div class="h2">Carregar treino</div>
+              <div class="sub">Adiciona todos os exercícios do plano</div>
+            </div>
+          </div>
+          <div class="template-grid">
+            <button class="template-btn" data-template="A">
+              <div class="t-label">A</div>
+              <div class="t-name">Costas + Bíceps</div>
+              <div class="t-count">7 exercícios</div>
+            </button>
+            <button class="template-btn" data-template="B">
+              <div class="t-label">B</div>
+              <div class="t-name">Peito + Tríceps</div>
+              <div class="t-count">6 exercícios</div>
+            </button>
+            <button class="template-btn" data-template="C">
+              <div class="t-label">C</div>
+              <div class="t-name">Pernas</div>
+              <div class="t-count">7 exercícios</div>
+            </button>
+            <button class="template-btn" data-template="D">
+              <div class="t-label">D</div>
+              <div class="t-name">Ombros + Trapézio</div>
+              <div class="t-count">6 exercícios</div>
+            </button>
+          </div>
+          <div class="mini" style="margin-top:10px">Exercícios já presentes no dia não são duplicados.</div>
         </div>
 
         <div id="workoutListCard">
@@ -802,6 +882,45 @@
 const STORAGE_KEY = "gym_tracker_offline_v1";
 const $ = id => document.getElementById(id);
 
+/* ─── Templates de treino ─── */
+const TEMPLATES = {
+  A: [
+    { exercise: "Puxada alta fechada",                  suggestion: "5×15" },
+    { exercise: "Remada curvada",                       suggestion: "5×15" },
+    { exercise: "Remada baixa aberta",                  suggestion: "4×15" },
+    { exercise: "Remada unilateral",                    suggestion: "4×15" },
+    { exercise: "Terra",                                suggestion: "4×15" },
+    { exercise: "Rosca direta + martelo simultâneo",    suggestion: "4×10" },
+    { exercise: "Rosca concentrada",                    suggestion: "4×15 s/descanso" },
+  ],
+  B: [
+    { exercise: "Crucifixo inclinado + supino halter",  suggestion: "5×15" },
+    { exercise: "Supino reto halter + flexão",          suggestion: "4×15+Max" },
+    { exercise: "Voador",                               suggestion: "5×15" },
+    { exercise: "Tríceps paralela",                     suggestion: "4×Max" },
+    { exercise: "Tríceps corda polia",                  suggestion: "5×15" },
+    { exercise: "Abdominal declinado",                  suggestion: "5×20" },
+    { exercise: "Prancha isométrica",                   suggestion: "4×1min (30s desc.)" },
+  ],
+  C: [
+    { exercise: "Agachamento guiado",                   suggestion: "4×15" },
+    { exercise: "Extensora",                            suggestion: "5×20" },
+    { exercise: "Leg press",                            suggestion: "4×15" },
+    { exercise: "Afundo",                               suggestion: "4×15" },
+    { exercise: "Elevação de pelve",                    suggestion: "4×15" },
+    { exercise: "Cadeira flexora",                      suggestion: "6×15" },
+    { exercise: "Panturrilha em pé",                    suggestion: "4×20+30 solo rápido" },
+  ],
+  D: [
+    { exercise: "Desenvolvimento Arnold",               suggestion: "5×15" },
+    { exercise: "Elevação lateral",                     suggestion: "5×15" },
+    { exercise: "Remada alta",                          suggestion: "4×15" },
+    { exercise: "Face pull + elevação frontal",         suggestion: "5×15" },
+    { exercise: "Trapézio",                             suggestion: "4×20" },
+    { exercise: "Abdominal remador",                    suggestion: "4×20" },
+  ],
+};
+
 /* ─── Estado global ─── */
 const state = {
   tab: "today",
@@ -966,6 +1085,7 @@ function renderWorkout() {
   workouts.forEach((w, idx) => {
     const ex = sanitizeText(w.exercise).trim() || "Exercício";
     const prevLoad = map[ex] ?? null;
+    const suggestion = sanitizeText(w.suggestion || "");
     const curLoad = Number(w.load);
     const hasCur = Number.isFinite(curLoad) && curLoad > 0;
     const hasPrev = prevLoad !== null && prevLoad > 0;
@@ -980,7 +1100,10 @@ function renderWorkout() {
     el.innerHTML = `
       <div class="itemTop">
         <div style="min-width:0">
-          <p class="itemName" title="${escapeHtml(ex)}">${escapeHtml(ex)}</p>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <p class="itemName" title="${escapeHtml(ex)}">${escapeHtml(ex)}</p>
+            ${suggestion ? `<span class="suggestion-badge">${escapeHtml(suggestion)}</span>` : ""}
+          </div>
           <div class="prev">
             Semana anterior (${isoPretty(prevISO)}):
             <b>${prevLoad === null ? "—" : prevLoad + " kg"}</b>
@@ -1522,6 +1645,31 @@ function wipeAll() {
   toast("Dados apagados.");
 }
 
+/* ─── Carregar template ─── */
+function loadTemplate(letter) {
+  const exercises = TEMPLATES[letter];
+  if (!exercises) return;
+
+  const arr = state.db.workoutsByDate[state.dateISO] || [];
+  const existing = new Set(arr.map(w => (w.exercise || "").trim().toLowerCase()));
+
+  let added = 0;
+  for (const item of exercises) {
+    if (existing.has(item.exercise.toLowerCase())) continue;
+    arr.push({ exercise: item.exercise, suggestion: item.suggestion, load: "", reps: "", sets: "" });
+    added++;
+  }
+
+  state.db.workoutsByDate[state.dateISO] = arr;
+  state._exCache = null;
+  saveDB();
+  renderWorkout();
+  renderTodayWorkoutSummary();
+
+  if (added === 0) toast("Todos os exercícios já estão no dia.");
+  else toast(`Treino ${letter} carregado — ${added} exercício${added > 1 ? "s" : ""} adicionado${added > 1 ? "s" : ""}.`);
+}
+
 /* ─── Eventos ─── */
 document.querySelectorAll(".tabbtn").forEach(btn => {
   btn.addEventListener("click", () => setTab(btn.dataset.tab));
@@ -1531,6 +1679,11 @@ $("dateInput").addEventListener("change", e => changeDate(e.target.value));
 $("saveBtn").addEventListener("click", collectAndSave);
 $("addExerciseBtn").addEventListener("click", openExerciseModal);
 $("goWorkout").addEventListener("click", () => setTab("workout"));
+
+// Templates
+document.querySelectorAll(".template-btn").forEach(btn => {
+  btn.addEventListener("click", () => loadTemplate(btn.dataset.template));
+});
 
 $("exportTreinos").addEventListener("click", exportTreinosCSV);
 $("exportBio").addEventListener("click", exportBioCSV);
