@@ -169,21 +169,14 @@
     .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:11px;color:#d4d4d8}
 
     /* Dashboard: calendar */
-    .calHead{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-    }
-    .calTitle{font-weight:950}
+    .calHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
     .calGrid{
       margin-top:12px;
       display:grid;
       grid-template-columns:repeat(7, 1fr);
       gap:8px;
     }
-    .dow{
-      text-align:center;
-      font-size:11px;color:var(--muted);
-      padding:2px 0;
-    }
+    .dow{text-align:center;font-size:11px;color:var(--muted);padding:2px 0}
     .calCell{
       height:44px;
       border-radius:14px;
@@ -238,10 +231,7 @@
       text-align:left;
       font-weight:950;
     }
-    th:first-child{
-      position:sticky;left:0;
-      z-index:3;
-    }
+    th:first-child{position:sticky;left:0;z-index:3}
     td:first-child{
       position:sticky;left:0;
       background:rgba(10,10,10,.92);
@@ -253,10 +243,7 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    td{
-      color:#d4d4d8;
-      background:rgba(16,16,16,.25);
-    }
+    td{color:#d4d4d8;background:rgba(16,16,16,.25)}
     .cellEmpty{color:rgba(255,255,255,.28)}
     .chip{
       display:inline-flex;gap:6px;align-items:center;
@@ -267,10 +254,19 @@
       font-size:12px;font-weight:900;
     }
     .chip .tinyDot{width:8px;height:8px;border-radius:999px;background:var(--accent2)}
+
+    /* Modal (picker exercícios) */
+    .modalCard{
+      width:min(520px, 92vw);
+      max-height:84vh;
+      overflow:hidden;
+    }
+    .list.scroll{max-height:42vh; overflow:auto; margin-top:12px}
   </style>
 </head>
 
 <body>
+  <!-- Overlay loading -->
   <div class="overlay" id="overlay">
     <div class="card" style="display:flex;gap:10px;align-items:center">
       <div class="spinner"></div>
@@ -278,6 +274,7 @@
     </div>
   </div>
 
+  <!-- Toast -->
   <div class="toast" id="toast"><span class="dot"></span><span id="toastText">Salvo!</span></div>
 
   <div class="wrap">
@@ -382,7 +379,6 @@
 
       <!-- DASHBOARD -->
       <section id="tab-dashboard" class="hidden">
-        <!-- Month overview -->
         <div class="card">
           <div class="calHead">
             <div>
@@ -408,7 +404,6 @@
           <div class="calGrid" id="monthGrid"></div>
         </div>
 
-        <!-- Stats cards -->
         <div class="card flat">
           <div class="h2">Resumo rápido</div>
           <div class="sub">Dias de treino, água e “puro” no mês selecionado</div>
@@ -437,7 +432,6 @@
           </div>
         </div>
 
-        <!-- Weekly exercise matrix -->
         <div class="card">
           <div class="row">
             <div>
@@ -449,7 +443,7 @@
               <button class="btn" id="wNext" title="Próxima semana">▶</button>
             </div>
           </div>
-          <div class="mini">Mostra a última execução do exercício no dia: <b>carga kg</b> + reps/séries.</div>
+          <div class="mini">Última execução do exercício no dia: <b>carga</b> + reps/séries. Toque na célula para abrir aquele dia.</div>
 
           <div class="tableWrap" id="matrixWrap">
             <table id="matrixTable"></table>
@@ -466,7 +460,7 @@
             <button class="btn accent" id="exportTreinos">Exportar Log_Treinos</button>
             <button class="btn accent" id="exportBio">Exportar Log_Bio</button>
           </div>
-          <div class="mini">Dica: no Sheets → Arquivo → Importar → Enviar → escolher o CSV.</div>
+          <div class="mini">Sheets → Arquivo → Importar → Enviar → escolher o CSV.</div>
         </div>
 
         <div class="card">
@@ -498,6 +492,7 @@
     </main>
   </div>
 
+  <!-- BAR SALVAR -->
   <div class="bar">
     <div class="barInner">
       <div class="barCard">
@@ -506,6 +501,34 @@
           <div class="sub" id="saveHint">Dados de —</div>
         </div>
         <button class="btn accent" id="saveBtn" style="padding:14px 16px;border-radius:18px">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Selecionar / Criar Exercício -->
+  <div class="overlay" id="exModalOverlay" style="display:none">
+    <div class="card modalCard">
+      <div class="row">
+        <div>
+          <div class="h2">Adicionar exercício</div>
+          <div class="sub">Selecione um existente ou crie um novo</div>
+        </div>
+        <button class="btn" id="exModalClose" aria-label="Fechar">✕</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>
+          <div class="sub">Buscar</div>
+          <input id="exSearch" placeholder="Ex: Supino, Agachamento..." />
+        </label>
+        <div class="mini">Toque em um exercício para adicionar (não duplica os do dia).</div>
+      </div>
+
+      <div id="exList" class="list scroll"></div>
+
+      <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap">
+        <button class="btn soft" id="exAddNew">+ Novo exercício…</button>
+        <button class="btn" id="exCancel">Cancelar</button>
       </div>
     </div>
   </div>
@@ -521,8 +544,8 @@ const state = {
   tab: "today",
   dateISO: toISO(new Date()),
   db: loadDB(),
-  dashMonthISO: null, // yyyy-mm (controla calendário do dashboard)
-  weekStartISO: null  // segunda-feira (inicio da semana exibida na tabela)
+  dashMonthISO: null, // yyyy-mm
+  weekStartISO: null  // monday ISO
 };
 
 function showOverlay(on){ $("overlay").classList.toggle("show", !!on); }
@@ -671,7 +694,7 @@ function renderWorkout(){
       state.db.workoutsByDate[state.dateISO] = arr;
       saveDB();
       renderWorkout();
-      toast("Removido (salvo local).");
+      toast("Removido.");
       if(state.tab === "dashboard") renderDashboard();
     });
   });
@@ -693,19 +716,15 @@ function renderWorkout(){
 function collectAndSave(){
   showOverlay(true);
   try{
-    // BIO
     state.db.bioByDate[state.dateISO] = {
       weight: numOrEmpty($("bioWeight").value),
       water: numOrEmpty($("bioWater").value),
       protocol: sanitizeText($("bioProtocol").value || "Puro"),
       notes: sanitizeText($("bioNotes").value || ""),
     };
-
-    // ensure workouts array
     if(!Array.isArray(state.db.workoutsByDate[state.dateISO])){
       state.db.workoutsByDate[state.dateISO] = [];
     }
-
     saveDB();
     toast("Salvo!");
     if(state.tab === "dashboard") renderDashboard();
@@ -714,23 +733,8 @@ function collectAndSave(){
   }
 }
 
-function addExercise(){
-  const name = prompt("Nome do exercício (ex: Supino Reto):");
-  if(!name) return;
-  const ex = name.trim();
-  if(!ex) return;
-
-  const arr = state.db.workoutsByDate[state.dateISO] || [];
-  arr.push({ exercise: ex, load: "", reps: "", sets: "" });
-  state.db.workoutsByDate[state.dateISO] = arr;
-  saveDB();
-  renderWorkout();
-  toast("Exercício adicionado.");
-  if(state.tab === "dashboard") renderDashboard();
-}
-
 /** ============================
- *  Dashboard
+ *  Picker de exercícios (melhoria)
  *  ============================ */
 function getAllExercises(){
   const set = new Set();
@@ -743,12 +747,78 @@ function getAllExercises(){
   return [...set].sort((a,b)=>a.localeCompare(b));
 }
 
-function isTrainedDay(dateISO){
-  const arr = state.db.workoutsByDate[dateISO] || [];
-  // considera treino se existir ao menos 1 exercício com nome
-  return arr.some(w => (w.exercise || "").trim() !== "");
+function addExercise(){ openExerciseModal(); }
+
+function addExerciseByName(exName){
+  const ex = (exName || "").trim();
+  if(!ex) return;
+  const arr = state.db.workoutsByDate[state.dateISO] || [];
+  arr.push({ exercise: ex, load: "", reps: "", sets: "" });
+  state.db.workoutsByDate[state.dateISO] = arr;
+  saveDB();
+  renderWorkout();
+  if(state.tab === "dashboard") renderDashboard();
 }
 
+function openExerciseModal(){
+  const overlay = $("exModalOverlay");
+  overlay.style.display = "flex";
+  $("exSearch").value = "";
+  renderExerciseModalList("");
+  setTimeout(()=> $("exSearch").focus(), 50);
+}
+function closeExerciseModal(){ $("exModalOverlay").style.display = "none"; }
+
+function renderExerciseModalList(filterText){
+  const list = $("exList");
+  list.innerHTML = "";
+
+  const all = getAllExercises();
+  const filter = (filterText || "").trim().toLowerCase();
+
+  const today = state.db.workoutsByDate[state.dateISO] || [];
+  const todaySet = new Set(today.map(w => (w.exercise || "").trim().toLowerCase()).filter(Boolean));
+
+  const shown = all
+    .filter(ex => !todaySet.has(ex.toLowerCase()))
+    .filter(ex => !filter || ex.toLowerCase().includes(filter))
+    .slice(0, 60);
+
+  if(shown.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "sub";
+    empty.textContent = filter
+      ? "Nenhum encontrado. Use “+ Novo exercício…”"
+      : "Nenhum exercício salvo ainda. Use “+ Novo exercício…”";
+    list.appendChild(empty);
+    return;
+  }
+
+  shown.forEach(ex=>{
+    const item = document.createElement("div");
+    item.className = "item";
+    item.style.cursor = "pointer";
+    item.innerHTML = `
+      <div class="row">
+        <div style="font-weight:950">${escapeHtml(ex)}</div>
+        <div class="sub">Adicionar</div>
+      </div>`;
+    item.addEventListener("click", ()=>{
+      addExerciseByName(ex);
+      closeExerciseModal();
+      toast("Exercício adicionado.");
+    });
+    list.appendChild(item);
+  });
+}
+
+/** ============================
+ *  Dashboard
+ *  ============================ */
+function isTrainedDay(dateISO){
+  const arr = state.db.workoutsByDate[dateISO] || [];
+  return arr.some(w => (w.exercise || "").trim() !== "");
+}
 function protocolClassForDate(dateISO){
   const bio = state.db.bioByDate[dateISO];
   if(!bio || !bio.protocol) return null;
@@ -758,18 +828,18 @@ function protocolClassForDate(dateISO){
   if(p === "ciclo") return "ciclo";
   return "other";
 }
+function getMondayISO(dateISO){
+  const d = new Date(dateISO + "T00:00:00");
+  const day = d.getDay(); // 0 dom
+  const diff = (day === 0 ? -6 : (1 - day));
+  d.setDate(d.getDate() + diff);
+  return toISO(d);
+}
 
 function renderDashboard(){
-  // init month if needed
-  if(!state.dashMonthISO){
-    state.dashMonthISO = state.dateISO.slice(0,7); // yyyy-mm
-  }
-  // init weekStart if needed (monday)
-  if(!state.weekStartISO){
-    state.weekStartISO = getMondayISO(state.dateISO);
-  }
+  if(!state.dashMonthISO) state.dashMonthISO = state.dateISO.slice(0,7);
+  if(!state.weekStartISO) state.weekStartISO = getMondayISO(state.dateISO);
 
-  // subtitle
   $("dashSub").textContent = monthPretty(state.dashMonthISO);
 
   renderMonthCalendar();
@@ -777,26 +847,15 @@ function renderDashboard(){
   renderWeekMatrix();
 }
 
-function getMondayISO(dateISO){
-  const d = new Date(dateISO + "T00:00:00");
-  // JS: 0=domingo... 1=segunda...
-  const day = d.getDay();
-  const diff = (day === 0 ? -6 : (1 - day)); // volta até segunda
-  d.setDate(d.getDate() + diff);
-  return toISO(d);
-}
-
 function renderMonthCalendar(){
   const [y,m] = state.dashMonthISO.split("-").map(Number);
   const first = new Date(y, m-1, 1);
   const daysInMonth = new Date(y, m, 0).getDate();
 
-  // start on Sunday grid
-  const startDow = first.getDay(); // 0=Domingo
+  const startDow = first.getDay(); // 0 dom
   const grid = $("monthGrid");
   grid.innerHTML = "";
 
-  // previous month spill
   const prevMonthDays = new Date(y, m-1, 0).getDate();
   for(let i=0; i<startDow; i++){
     const dayNum = prevMonthDays - (startDow - 1 - i);
@@ -806,7 +865,6 @@ function renderMonthCalendar(){
     grid.appendChild(cell);
   }
 
-  // month days
   for(let day=1; day<=daysInMonth; day++){
     const dateISO = `${y}-${String(m).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
     const cell = document.createElement("div");
@@ -814,17 +872,13 @@ function renderMonthCalendar(){
     const trained = isTrainedDay(dateISO);
     const pClass = protocolClassForDate(dateISO);
 
-    cell.className = "calCell" +
-      (isToday ? " today" : "") +
-      (trained ? " trained" : "");
-
+    cell.className = "calCell" + (isToday ? " today" : "") + (trained ? " trained" : "");
     cell.textContent = day;
 
     const dot = document.createElement("div");
     dot.className = "badgeDot" + (pClass ? (" " + pClass) : "");
     cell.appendChild(dot);
 
-    // clique: setar a data atual do app
     cell.addEventListener("click", ()=>{
       state.dateISO = dateISO;
       renderHeader();
@@ -836,7 +890,6 @@ function renderMonthCalendar(){
     grid.appendChild(cell);
   }
 
-  // fill remaining to complete 6 rows (42 cells)
   const total = startDow + daysInMonth;
   const remaining = (total <= 35) ? (35 - total) : (42 - total);
   for(let i=1;i<=remaining;i++){
@@ -859,7 +912,6 @@ function renderMonthStats(){
   let waterDays = 0;
   let protocolCount = { puro:0, ciclo:0, other:0, none:0 };
 
-  // loop dates
   for(let d = startISO; d <= endISO; d = addDays(d, 1)){
     if(isTrainedDay(d)) trainDays++;
 
@@ -879,12 +931,9 @@ function renderMonthStats(){
     }
   }
 
-  // streak de treino (até hoje dentro do mês, olhando para trás)
   let streak = 0;
   const today = toISO(new Date());
-  // começa do min(today, endISO)
   let cursor = (today < endISO) ? today : endISO;
-  // só conta streak se cursor estiver dentro do mês
   if(cursor >= startISO){
     for(let d = cursor; d >= startISO; d = addDays(d, -1)){
       if(isTrainedDay(d)) streak++;
@@ -896,8 +945,7 @@ function renderMonthStats(){
   $("statTrainStreak").textContent = `Streak: ${streak} dia(s)`;
   $("statPuroDays").textContent = puroDays;
 
-  const protNote = `Ciclo: ${protocolCount.ciclo} • Outros: ${protocolCount.other} • Sem: ${protocolCount.none}`;
-  $("statProtocolNote").textContent = protNote;
+  $("statProtocolNote").textContent = `Ciclo: ${protocolCount.ciclo} • Outros: ${protocolCount.other} • Sem: ${protocolCount.none}`;
 
   $("statWaterTotal").textContent = waterTotal ? String(waterTotal) : "0";
   $("statWaterDays").textContent = waterDays;
@@ -906,9 +954,9 @@ function renderMonthStats(){
 }
 
 function getWorkoutCellSummary(dateISO, exercise){
-  // pega o último registro do exercício nesse dia (ou o maior load — aqui uso maior load pra ficar mais útil)
   const arr = state.db.workoutsByDate[dateISO] || [];
   let best = null;
+
   for(const w of arr){
     const ex = (w.exercise || "").trim();
     if(ex.toLowerCase() !== exercise.toLowerCase()) continue;
@@ -916,13 +964,11 @@ function getWorkoutCellSummary(dateISO, exercise){
     const load = Number(w.load);
     const reps = Number(w.reps);
     const sets = Number(w.sets);
-
     const loadOk = Number.isFinite(load) ? load : null;
 
     if(!best){
       best = { load: loadOk, reps: Number.isFinite(reps)?reps:null, sets: Number.isFinite(sets)?sets:null };
     } else {
-      // prioriza maior carga
       if(loadOk !== null && (best.load === null || loadOk > best.load)){
         best = { load: loadOk, reps: Number.isFinite(reps)?reps:null, sets: Number.isFinite(sets)?sets:null };
       }
@@ -939,11 +985,9 @@ function getWorkoutCellSummary(dateISO, exercise){
 }
 
 function renderWeekMatrix(){
-  const start = state.weekStartISO; // monday
+  const start = state.weekStartISO;
   const days = [];
-  for(let i=0;i<7;i++){
-    days.push(addDays(start, i));
-  }
+  for(let i=0;i<7;i++) days.push(addDays(start, i));
   const end = days[6];
   $("weekLabel").textContent = `${isoPretty(start)} → ${isoPretty(end)}`;
 
@@ -951,7 +995,6 @@ function renderWeekMatrix(){
   const table = $("matrixTable");
   table.innerHTML = "";
 
-  // header
   const thead = document.createElement("thead");
   const trh = document.createElement("tr");
   const th0 = document.createElement("th");
@@ -991,13 +1034,9 @@ function renderWeekMatrix(){
       const td = document.createElement("td");
       const sum = getWorkoutCellSummary(d, ex);
 
-      if(!sum){
-        td.innerHTML = `<span class="cellEmpty">—</span>`;
-      } else {
-        td.textContent = sum;
-      }
+      if(!sum) td.innerHTML = `<span class="cellEmpty">—</span>`;
+      else td.textContent = sum;
 
-      // clique pra ir direto naquele dia
       td.style.cursor = "pointer";
       td.addEventListener("click", ()=>{
         state.dateISO = d;
@@ -1042,13 +1081,7 @@ function exportTreinosCSV(){
   dates.forEach(dateISO=>{
     const arr = state.db.workoutsByDate[dateISO] || [];
     arr.forEach(w=>{
-      rows.push([
-        dateISO,
-        sanitizeText(w.exercise),
-        w.load ?? "",
-        w.reps ?? "",
-        w.sets ?? "",
-      ]);
+      rows.push([dateISO, sanitizeText(w.exercise), w.load ?? "", w.reps ?? "", w.sets ?? ""]);
     });
   });
   const csv = rows.map(r => r.map(csvEscape).join(";")).join("\n");
@@ -1060,13 +1093,7 @@ function exportBioCSV(){
   const dates = Object.keys(state.db.bioByDate).sort();
   dates.forEach(dateISO=>{
     const b = state.db.bioByDate[dateISO] || {};
-    rows.push([
-      dateISO,
-      b.weight ?? "",
-      b.water ?? "",
-      sanitizeText(b.protocol),
-      sanitizeText(b.notes),
-    ]);
+    rows.push([dateISO, b.weight ?? "", b.water ?? "", sanitizeText(b.protocol), sanitizeText(b.notes)]);
   });
   const csv = rows.map(r => r.map(csvEscape).join(";")).join("\n");
   downloadText(`Log_Bio_${toISO(new Date())}.csv`, csv);
@@ -1086,9 +1113,7 @@ function parseCSV(text){
         else inQ = !inQ;
       } else if(ch === ";" && !inQ){
         row.push(cur); cur = "";
-      } else {
-        cur += ch;
-      }
+      } else cur += ch;
     }
     row.push(cur);
     out.push(row);
@@ -1121,9 +1146,7 @@ function importTreinosCSVFile(file){
           sets: numOrEmpty(r[idxSets]),
         });
       }
-      Object.keys(map).forEach(d=>{
-        state.db.workoutsByDate[d] = map[d];
-      });
+      Object.keys(map).forEach(d=> state.db.workoutsByDate[d] = map[d]);
       saveDB();
       renderWorkout();
       if(state.tab === "dashboard") renderDashboard();
@@ -1250,7 +1273,6 @@ $("mNext").addEventListener("click", ()=>{
   state.dashMonthISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
   renderDashboard();
 });
-
 $("wPrev").addEventListener("click", ()=>{
   state.weekStartISO = addDays(state.weekStartISO, -7);
   renderDashboard();
@@ -1258,6 +1280,23 @@ $("wPrev").addEventListener("click", ()=>{
 $("wNext").addEventListener("click", ()=>{
   state.weekStartISO = addDays(state.weekStartISO, 7);
   renderDashboard();
+});
+
+// Modal picker
+$("exModalClose").addEventListener("click", closeExerciseModal);
+$("exCancel").addEventListener("click", closeExerciseModal);
+$("exSearch").addEventListener("input", (e)=> renderExerciseModalList(e.target.value));
+$("exAddNew").addEventListener("click", ()=>{
+  const name = prompt("Nome do exercício novo (ex: Supino Reto):");
+  if(!name) return;
+  const ex = name.trim();
+  if(!ex) return;
+  addExerciseByName(ex);
+  closeExerciseModal();
+  toast("Novo exercício adicionado.");
+});
+$("exModalOverlay").addEventListener("click", (e)=>{
+  if(e.target && e.target.id === "exModalOverlay") closeExerciseModal();
 });
 
 /** ============================
