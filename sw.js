@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-tracker-offline-v2";
+const CACHE_NAME = "gym-tracker-offline-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -27,3 +27,4 @@ self.addEventListener("fetch", (event) => {
   );
 
 });
+
