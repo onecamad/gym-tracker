@@ -3,290 +3,534 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="theme-color" content="#080808" />
   <link rel="manifest" href="./manifest.json" />
-  <title>Gym Tracker (Offline)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Gym Tracker</title>
 
   <style>
     :root{
-      --bg:#050505;
-      --panel:#0b0b0b;
-      --panel2:#101010;
-      --border:#1f1f1f;
-      --text:#f4f4f5;
-      --muted:#a1a1aa;
-      --accent:#34d399; /* emerald */
-      --accent2:#22d3ee; /* cyan */
-      --danger:#fb7185;
-      --shadow: 0 12px 30px rgba(0,0,0,.45);
-      --radius:18px;
-      --puro:#34d399;
-      --ciclo:#fb7185;
-      --other:#22d3ee;
+      --bg: #080808;
+      --panel: #0e0e0e;
+      --panel2: #131313;
+      --border: #1e1e1e;
+      --border2: #252525;
+      --text: #f0f0f0;
+      --muted: #6b6b6b;
+      --muted2: #4a4a4a;
+      --accent: #c8f566;    /* lime punch */
+      --accent2: #66f5c8;   /* mint */
+      --accent3: #f5a366;   /* amber */
+      --danger: #f56674;
+      --shadow: 0 8px 32px rgba(0,0,0,.6);
+      --shadow-sm: 0 2px 8px rgba(0,0,0,.4);
+      --radius: 20px;
+      --radius-sm: 14px;
+      --puro: #c8f566;
+      --ciclo: #f56674;
+      --other: #66f5c8;
+
+      --font-head: 'Outfit', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      background:linear-gradient(180deg, #050505 0%, #070707 100%);
-      color:var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100dvh;
+      overflow-x: hidden;
     }
-    .wrap{max-width:520px;margin:0 auto;padding-bottom:96px}
-    header{
-      position:sticky;top:0;z-index:20;
-      backdrop-filter: blur(10px);
-      background: rgba(5,5,5,.78);
-      border-bottom:1px solid var(--border);
+
+    /* ── Noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: .025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
     }
-    .head{padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .title{line-height:1.1}
-    .title h1{margin:0;font-size:18px;font-weight:700;letter-spacing:-.2px}
-    .title p{margin:4px 0 0;color:var(--muted);font-size:12px}
-    .pill{
-      font-size:12px;color:#d4d4d8;
-      border:1px solid var(--border);
-      background:rgba(16,16,16,.6);
-      padding:8px 10px;border-radius:999px;
-      display:flex;gap:6px;align-items:center;
-      white-space:nowrap;
+
+    .wrap { max-width: 520px; margin: 0 auto; padding-bottom: 100px; position: relative; z-index: 1; }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(8,8,8,.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border);
     }
-    .tabs{padding:0 16px 14px}
-    .tabsbar{
-      display:grid;grid-template-columns:repeat(4,1fr);
-      gap:6px;
-      padding:6px;border:1px solid var(--border);
-      border-radius:999px;background:rgba(16,16,16,.65);
+
+    .head {
+      padding: 18px 18px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    .tabbtn{
-      border:0;background:transparent;color:#cbd5e1;
-      padding:10px 10px;border-radius:999px;
-      font-weight:800;font-size:12.5px;
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
     }
-    .tabbtn.active{
-      background: rgba(52,211,153,.14);
-      border:1px solid rgba(52,211,153,.22);
-      color: #b7f7d8;
-    }
-    main{padding:16px;display:flex;flex-direction:column;gap:14px}
-    .card{
-      background:rgba(11,11,11,.95);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:14px;
-      box-shadow: var(--shadow);
-    }
-    .card.flat{box-shadow:none;background:rgba(11,11,11,.7)}
-    .row{display:flex;gap:12px;align-items:center;justify-content:space-between}
-    .sub{font-size:12px;color:var(--muted)}
-    .h2{font-size:14px;font-weight:900;margin:0}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    label{display:block}
-    input, select, textarea{
-      width:100%;
-      border:1px solid var(--border);
-      background:rgba(16,16,16,.9);
-      color:var(--text);
-      border-radius:14px;
-      padding:12px 12px;
-      outline:none;
-      font-size:14px;
-    }
-    textarea{resize:vertical;min-height:86px}
-    .mini{font-size:11px;color:var(--muted);margin-top:6px}
-    .btn{
-      border:1px solid var(--border);
-      background:rgba(16,16,16,.9);
-      color:var(--text);
-      padding:10px 12px;border-radius:14px;
-      font-weight:900;font-size:13px;
-    }
-    .btn.accent{
+
+    .logo-icon {
+      width: 34px; height: 34px;
       background: var(--accent);
-      border-color: rgba(0,0,0,.2);
-      color:#04140d;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(200,245,102,.25);
     }
-    .btn.soft{
-      background: rgba(34,211,238,.12);
-      border-color: rgba(34,211,238,.22);
-      color:#bff7ff;
-    }
-    .btn.danger{
-      background: rgba(251,113,133,.12);
-      border-color: rgba(251,113,133,.22);
-      color:#ffd0d8;
-    }
-    .list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-    .item{
-      background:rgba(16,16,16,.65);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:12px;
-    }
-    .itemTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .itemName{font-weight:950;font-size:14px;margin:0;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .prev{font-size:12px;color:var(--muted);margin-top:4px}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
-    .mutebox{color:var(--muted)}
-    .hidden{display:none !important}
 
-    .bar{
-      position:fixed;left:0;right:0;bottom:0;z-index:30;
-      background: rgba(5,5,5,.78);
-      backdrop-filter: blur(10px);
-      border-top:1px solid var(--border);
+    .title h1 {
+      font-family: var(--font-head);
+      font-size: 17px; font-weight: 800;
+      letter-spacing: -.3px;
+      line-height: 1;
     }
-    .barInner{max-width:520px;margin:0 auto;padding:12px 16px}
-    .barCard{
-      background: rgba(11,11,11,.92);
-      border:1px solid var(--border);
-      border-radius:22px;
-      padding:12px;
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
+    .title p { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: var(--font-mono); }
+
+    .date-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--border2);
+      background: var(--panel);
+      padding: 7px 11px;
+      border-radius: 999px;
+      display: flex; gap: 6px; align-items: center;
+      white-space: nowrap;
+    }
+    .date-pill strong { color: var(--accent); font-weight: 500; }
+
+    /* ── Tabs ── */
+    .tabs { padding: 0 18px 16px; }
+    .tabsbar {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 5px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--panel);
+    }
+
+    .tabbtn {
+      border: 0; background: transparent;
+      color: var(--muted);
+      padding: 9px 6px; border-radius: 999px;
+      font-family: var(--font-head);
+      font-weight: 700; font-size: 11.5px;
+      letter-spacing: .3px;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+    .tabbtn:hover { color: var(--text); }
+    .tabbtn.active {
+      background: var(--accent);
+      color: #0a1500;
+      box-shadow: 0 0 12px rgba(200,245,102,.3);
+    }
+
+    /* ── Main ── */
+    main { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color .2s;
+    }
+    .card:hover { border-color: var(--border2); }
+    .card.flat { box-shadow: none; background: rgba(14,14,14,.6); }
+    .card.accent-glow { box-shadow: 0 0 24px rgba(200,245,102,.08); border-color: rgba(200,245,102,.15); }
+
+    /* ── Typography ── */
+    .h2 {
+      font-family: var(--font-head);
+      font-size: 13px; font-weight: 800;
+      letter-spacing: .2px;
+      color: var(--text);
+    }
+    .sub { font-size: 12px; color: var(--muted); }
+    .mini { font-size: 11px; color: var(--muted2); margin-top: 6px; line-height: 1.4; }
+    .mono { font-family: var(--font-mono); }
+
+    /* ── Layout ── */
+    .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .hidden { display: none !important; }
+
+    /* ── Inputs ── */
+    label { display: block; }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border2);
+      background: rgba(10,10,10,.8);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      padding: 11px 13px;
+      outline: none;
+      font-size: 14px;
+      font-family: var(--font-body);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(200,245,102,.4);
+      box-shadow: 0 0 0 3px rgba(200,245,102,.06);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    select option { background: #111; }
+
+    /* ── Buttons ── */
+    .btn {
+      border: 1px solid var(--border2);
+      background: var(--panel2);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-head);
+      font-weight: 700; font-size: 12px;
+      cursor: pointer;
+      transition: all .15s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--border2); background: #1a1a1a; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn.accent {
+      background: var(--accent);
+      border-color: transparent;
+      color: #0a1500;
+      font-weight: 800;
+      box-shadow: 0 0 16px rgba(200,245,102,.2);
+    }
+    .btn.accent:hover { background: #d4f770; box-shadow: 0 0 24px rgba(200,245,102,.35); }
+
+    .btn.soft {
+      background: rgba(102,245,200,.08);
+      border-color: rgba(102,245,200,.18);
+      color: #a0fce2;
+    }
+    .btn.soft:hover { background: rgba(102,245,200,.14); }
+
+    .btn.danger {
+      background: rgba(245,102,116,.08);
+      border-color: rgba(245,102,116,.2);
+      color: #ffb0b8;
+    }
+    .btn.danger:hover { background: rgba(245,102,116,.14); }
+
+    .btn.ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--muted);
+    }
+
+    /* ── Workout list ── */
+    .list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+
+    .item {
+      background: rgba(10,10,10,.7);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      transition: border-color .2s;
+      animation: slideIn .2s ease;
+    }
+    .item:hover { border-color: var(--border2); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .itemTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .itemName {
+      font-family: var(--font-head);
+      font-weight: 800; font-size: 14px;
+      max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .prev {
+      font-size: 11px; color: var(--muted); margin-top: 3px;
+      font-family: var(--font-mono);
+    }
+    .prev b { color: var(--accent); font-weight: 500; }
+
+    /* Progress bar no item */
+    .load-bar-wrap {
+      height: 2px; background: var(--border); border-radius: 999px;
+      margin: 10px 0 2px; overflow: hidden;
+    }
+    .load-bar {
+      height: 100%; border-radius: 999px;
+      background: var(--accent);
+      transition: width .4s ease;
+    }
+
+    /* ── Bottom bar ── */
+    .bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      background: rgba(8,8,8,.9);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+    }
+    .barInner { max-width: 520px; margin: 0 auto; padding: 12px 18px; }
+    .barCard {
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-radius: 22px;
+      padding: 12px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
       box-shadow: var(--shadow);
     }
-    .toast{
-      position:fixed;left:50%;transform:translateX(-50%);
-      bottom:92px;z-index:40;
-      background: rgba(15,15,15,.95);
-      border:1px solid rgba(52,211,153,.22);
-      padding:12px 14px;border-radius:16px;
-      display:none;box-shadow: var(--shadow);
-      font-size:13px;
-    }
-    .toast.show{display:block}
-    .dot{width:10px;height:10px;border-radius:999px;background:var(--accent);display:inline-block;margin-right:8px}
-    .overlay{
-      position:fixed;inset:0;display:none;align-items:center;justify-content:center;
-      background: rgba(0,0,0,.55);
-      z-index:50;
-    }
-    .overlay.show{display:flex}
-    .spinner{
-      width:18px;height:18px;border:2px solid #9ca3af;border-top-color:transparent;border-radius:999px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:11px;color:#d4d4d8}
+    .barLabel { font-family: var(--font-head); font-weight: 800; font-size: 12px; letter-spacing: .5px; color: var(--muted); text-transform: uppercase; }
+    .barDate { font-family: var(--font-mono); font-size: 11px; color: var(--muted2); margin-top: 2px; }
 
-    /* Dashboard: calendar */
-    .calHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .calGrid{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns:repeat(7, 1fr);
-      gap:8px;
+    /* Unsaved indicator */
+    .unsaved-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 999px;
+      background: var(--accent3);
+      margin-left: 6px;
+      vertical-align: middle;
+      opacity: 0;
+      transition: opacity .3s;
     }
-    .dow{text-align:center;font-size:11px;color:var(--muted);padding:2px 0}
-    .calCell{
-      height:44px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background:rgba(16,16,16,.6);
-      display:flex;align-items:center;justify-content:center;
-      position:relative;
-      font-weight:900;font-size:13px;
-      color:#e5e7eb;
-    }
-    .calCell.dim{opacity:.35}
-    .calCell.today{outline:1px solid rgba(34,211,238,.45)}
-    .calCell.trained{border-color: rgba(52,211,153,.35)}
-    .badgeDot{
-      position:absolute;
-      bottom:6px; left:50%;
-      transform:translateX(-50%);
-      width:10px;height:10px;border-radius:999px;
-      background:transparent;
-      border:1px solid rgba(255,255,255,.12);
-    }
-    .badgeDot.puro{background: var(--puro); border-color: rgba(52,211,153,.35)}
-    .badgeDot.ciclo{background: var(--ciclo); border-color: rgba(251,113,133,.35)}
-    .badgeDot.other{background: var(--other); border-color: rgba(34,211,238,.35)}
+    .unsaved-dot.show { opacity: 1; }
 
-    /* Dashboard: table */
-    .tableWrap{
-      margin-top:12px;
-      overflow:auto;
-      border:1px solid var(--border);
-      border-radius:16px;
-      background:rgba(16,16,16,.45);
+    /* ── Toast ── */
+    .toast {
+      position: fixed; left: 50%; transform: translateX(-50%);
+      bottom: 96px; z-index: 40;
+      background: rgba(14,14,14,.97);
+      border: 1px solid var(--border2);
+      padding: 11px 16px; border-radius: 14px;
+      display: none; box-shadow: var(--shadow);
+      font-size: 13px; font-family: var(--font-body);
+      white-space: nowrap;
+      gap: 8px; align-items: center;
     }
-    table{
-      border-collapse:separate;
-      border-spacing:0;
-      width:100%;
-      min-width:560px;
-      font-size:12px;
+    .toast.show { display: flex; animation: toastIn .2s ease; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
-    th, td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      border-right:1px solid rgba(255,255,255,.06);
-      vertical-align:top;
-    }
-    th{
-      position:sticky;top:0;
-      background:rgba(10,10,10,.92);
-      z-index:2;
-      color:#e5e7eb;
-      text-align:left;
-      font-weight:950;
-    }
-    th:first-child{position:sticky;left:0;z-index:3}
-    td:first-child{
-      position:sticky;left:0;
-      background:rgba(10,10,10,.92);
-      z-index:1;
-      font-weight:950;
-      color:#e5e7eb;
-      max-width:170px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    td{color:#d4d4d8;background:rgba(16,16,16,.25)}
-    .cellEmpty{color:rgba(255,255,255,.28)}
-    .chip{
-      display:inline-flex;gap:6px;align-items:center;
-      padding:6px 10px;border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(16,16,16,.65);
-      color:#e5e7eb;
-      font-size:12px;font-weight:900;
-    }
-    .chip .tinyDot{width:8px;height:8px;border-radius:999px;background:var(--accent2)}
+    .toast-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); flex-shrink: 0; }
+    .toast-dot.warn { background: var(--accent3); }
+    .toast-dot.err  { background: var(--danger); }
 
-    /* Modal (picker exercícios) */
-    .modalCard{
-      width:min(520px, 92vw);
-      max-height:84vh;
-      overflow:hidden;
+    /* ── Overlay ── */
+    .overlay {
+      position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      z-index: 50;
     }
-    .list.scroll{max-height:42vh; overflow:auto; margin-top:12px}
+    .overlay.show { display: flex; }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,.15);
+      border-top-color: var(--accent);
+      border-radius: 999px;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Dashboard: Calendar ── */
+    .calHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+    .calGrid {
+      margin-top: 12px;
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .dow {
+      text-align: center; font-size: 10px;
+      color: var(--muted); padding: 2px 0;
+      font-family: var(--font-mono);
+    }
+    .calCell {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(14,14,14,.5);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      position: relative;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #9a9a9a;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .calCell:hover { border-color: var(--border2); background: rgba(20,20,20,.8); }
+    .calCell.dim { opacity: .2; cursor: default; pointer-events: none; }
+    .calCell.today { border-color: rgba(102,245,200,.4); color: var(--accent2); }
+    .calCell.trained { border-color: rgba(200,245,102,.3); color: var(--text); }
+
+    .badgeDot {
+      width: 5px; height: 5px; border-radius: 999px;
+      background: transparent;
+      margin-top: 3px;
+    }
+    .badgeDot.puro  { background: var(--puro); }
+    .badgeDot.ciclo { background: var(--ciclo); }
+    .badgeDot.other { background: var(--other); }
+
+    /* ── Stats cards ── */
+    .stat-val {
+      font-family: var(--font-head);
+      font-size: 28px; font-weight: 900;
+      line-height: 1;
+      margin-top: 8px;
+    }
+    .stat-val.accent { color: var(--accent); }
+    .stat-val.cyan   { color: var(--accent2); }
+    .stat-val.amber  { color: var(--accent3); }
+
+    /* ── Table ── */
+    .tableWrap {
+      margin-top: 12px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(14,14,14,.4);
+      -webkit-overflow-scrolling: touch;
+    }
+    table {
+      border-collapse: separate; border-spacing: 0;
+      width: 100%; min-width: 560px;
+      font-size: 11.5px; font-family: var(--font-mono);
+    }
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      border-right: 1px solid rgba(255,255,255,.04);
+      vertical-align: top;
+    }
+    th {
+      position: sticky; top: 0;
+      background: rgba(8,8,8,.95);
+      z-index: 2; color: var(--muted);
+      text-align: left;
+      font-family: var(--font-head);
+      font-weight: 800; font-size: 11px;
+      letter-spacing: .3px;
+    }
+    th:first-child { position: sticky; left: 0; z-index: 3; }
+    td:first-child {
+      position: sticky; left: 0;
+      background: rgba(10,10,10,.95); z-index: 1;
+      font-family: var(--font-head);
+      font-weight: 700; color: var(--text);
+      max-width: 160px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+      font-size: 11.5px;
+    }
+    td { color: #b0b0b0; background: rgba(14,14,14,.2); }
+    td:hover { background: rgba(200,245,102,.04); cursor: pointer; }
+    .cellEmpty { color: rgba(255,255,255,.18); }
+    .cellFill  { color: var(--accent); font-weight: 500; }
+
+    /* ── Legend chips ── */
+    .chip {
+      display: inline-flex; gap: 5px; align-items: center;
+      padding: 5px 9px; border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(14,14,14,.65);
+      color: #c0c0c0;
+      font-size: 11px; font-weight: 600;
+    }
+    .tinyDot { width: 7px; height: 7px; border-radius: 999px; }
+
+    /* ── Modal ── */
+    .modalCard {
+      width: min(500px, 92vw);
+      max-height: 82vh;
+      overflow: hidden;
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.7);
+    }
+    .list.scroll { max-height: 40vh; overflow-y: auto; margin-top: 12px; }
+    .list.scroll::-webkit-scrollbar { width: 4px; }
+    .list.scroll::-webkit-scrollbar-track { background: transparent; }
+    .list.scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 999px; }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center; padding: 24px 16px;
+      color: var(--muted);
+    }
+    .empty-state .empty-icon { font-size: 32px; margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; line-height: 1.5; }
+
+    /* ── Storage warning ── */
+    .storage-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 10px;
+      background: rgba(245,163,102,.06);
+      border: 1px solid rgba(245,163,102,.18);
+      font-size: 11px; color: #f5c366;
+      margin-top: 12px;
+    }
+    .storage-bar.hidden { display: none; }
+
+    /* Animations on tab switch */
+    section { animation: fadeUp .2s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scrollbar global */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 999px; }
   </style>
 </head>
 
 <body>
   <!-- Overlay loading -->
   <div class="overlay" id="overlay">
-    <div class="card" style="display:flex;gap:10px;align-items:center">
+    <div class="card" style="display:flex;gap:12px;align-items:center;padding:18px 22px">
       <div class="spinner"></div>
-      <div style="font-weight:900">Processando...</div>
+      <div style="font-family:var(--font-head);font-weight:800;font-size:13px">Salvando...</div>
     </div>
   </div>
 
   <!-- Toast -->
-  <div class="toast" id="toast"><span class="dot"></span><span id="toastText">Salvo!</span></div>
+  <div class="toast" id="toast">
+    <span class="toast-dot" id="toastDot"></span>
+    <span id="toastText">Salvo!</span>
+  </div>
 
   <div class="wrap">
     <header>
       <div class="head">
-        <div class="title">
-          <h1>Gym Tracker</h1>
-          <p>Offline • Simples • Mobile</p>
+        <div class="logo">
+          <div class="logo-icon">🏋️</div>
+          <div class="title">
+            <h1>GymTracker</h1>
+            <p>offline · local · privado</p>
+          </div>
         </div>
-        <div class="pill">
-          <span class="mutebox">Data:</span>
-          <span id="datePretty">—</span>
+        <div class="date-pill">
+          <strong id="datePretty">—</strong>
         </div>
       </div>
 
@@ -294,156 +538,155 @@
         <div class="tabsbar">
           <button class="tabbtn active" data-tab="today">Hoje</button>
           <button class="tabbtn" data-tab="workout">Treino</button>
-          <button class="tabbtn" data-tab="dashboard">Dashboard</button>
+          <button class="tabbtn" data-tab="dashboard">Stats</button>
           <button class="tabbtn" data-tab="backup">Backup</button>
         </div>
       </div>
     </header>
 
     <main>
-      <!-- HOJE -->
+      <!-- ══ HOJE ══ -->
       <section id="tab-today">
         <div class="card flat">
           <div class="row">
             <div>
-              <div class="h2">Resumo do dia</div>
-              <div class="sub">Peso, água e protocolo</div>
+              <div class="h2">Dados do dia</div>
+              <div class="sub">Peso, hidratação e protocolo</div>
             </div>
-            <input id="dateInput" type="date" style="max-width:170px" />
+            <input id="dateInput" type="date" style="max-width:160px" />
           </div>
         </div>
 
         <div class="card">
           <div class="grid2">
             <label>
-              <div class="sub">Peso (kg)</div>
-              <input id="bioWeight" inputmode="decimal" placeholder="Ex: 78.4" />
+              <div class="sub" style="margin-bottom:6px">Peso (kg)</div>
+              <input id="bioWeight" inputmode="decimal" placeholder="Ex: 78.4" autocomplete="off" />
             </label>
             <label>
-              <div class="sub">Água (ml ou copos)</div>
-              <input id="bioWater" inputmode="numeric" placeholder="Ex: 2500" />
+              <div class="sub" style="margin-bottom:6px">Água (ml)</div>
+              <input id="bioWater" inputmode="numeric" placeholder="Ex: 2500" autocomplete="off" />
             </label>
           </div>
 
-          <div style="margin-top:10px">
-            <label>
-              <div class="sub">Protocolo</div>
-              <select id="bioProtocol">
-                <option value="Puro">Puro</option>
-                <option value="Ciclo">Ciclo</option>
-                <option value="Cafeína">Cafeína</option>
-                <option value="Creatina">Creatina</option>
-                <option value="Outro">Outro</option>
-              </select>
-              <div class="mini">Apenas registro. Sem recomendações.</div>
-            </label>
+          <div style="margin-top:12px">
+            <div class="sub" style="margin-bottom:6px">Protocolo</div>
+            <select id="bioProtocol">
+              <option value="Puro">Puro</option>
+              <option value="Ciclo">Ciclo</option>
+              <option value="Cafeína">Cafeína</option>
+              <option value="Creatina">Creatina</option>
+              <option value="Outro">Outro</option>
+            </select>
+            <div class="mini">Apenas registro pessoal. Sem recomendações.</div>
           </div>
 
-          <div style="margin-top:10px">
-            <label>
-              <div class="sub">Observações</div>
-              <textarea id="bioNotes" placeholder="Sono, dor, humor, pump..."></textarea>
-            </label>
+          <div style="margin-top:12px">
+            <div class="sub" style="margin-bottom:6px">Observações</div>
+            <textarea id="bioNotes" placeholder="Sono, dor, humor, pump..."></textarea>
           </div>
         </div>
 
-        <div class="card flat">
+        <div class="card flat accent-glow">
           <div class="row">
             <div>
               <div class="h2">Treino do dia</div>
-              <div class="sub">Abra a aba “Treino” para registrar.</div>
+              <div class="sub" id="todayWorkoutSummary">Abra a aba Treino para registrar.</div>
             </div>
             <button class="btn soft" id="goWorkout">Ir →</button>
           </div>
         </div>
       </section>
 
-      <!-- TREINO -->
+      <!-- ══ TREINO ══ -->
       <section id="tab-workout" class="hidden">
         <div class="card flat">
           <div class="row">
             <div>
               <div class="h2">Exercícios</div>
-              <div class="sub">Carga • reps • séries + semana anterior</div>
+              <div class="sub">Salvamento automático ao digitar</div>
             </div>
-            <button class="btn soft" id="addExerciseBtn">+ Exercício</button>
+            <button class="btn accent" id="addExerciseBtn">+ Add</button>
           </div>
-          <div class="mini">“Semana anterior” = data selecionada − 7 dias (máxima carga do dia).</div>
+          <div class="mini">A coluna "semana anterior" usa a data selecionada − 7 dias.</div>
         </div>
 
-        <div class="card" id="workoutListCard">
-          <div id="workoutEmpty" class="sub">Sem exercícios ainda. Toque em <span class="kbd">+ Exercício</span>.</div>
+        <div id="workoutListCard">
+          <div id="workoutEmpty" class="empty-state">
+            <div class="empty-icon">💪</div>
+            <p>Sem exercícios ainda.<br>Toque em <strong>+ Add</strong> para começar.</p>
+          </div>
           <div class="list" id="workoutList"></div>
         </div>
       </section>
 
-      <!-- DASHBOARD -->
+      <!-- ══ DASHBOARD ══ -->
       <section id="tab-dashboard" class="hidden">
+
+        <!-- Calendário -->
         <div class="card">
           <div class="calHead">
             <div>
-              <div class="h2">Dashboard do mês</div>
-              <div class="sub" id="dashSub">—</div>
+              <div class="h2" id="dashSub">—</div>
+              <div class="sub">Calendário mensal</div>
             </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn" id="mPrev" title="Mês anterior">◀</button>
-              <button class="btn" id="mNext" title="Próximo mês">▶</button>
+            <div style="display:flex;gap:6px">
+              <button class="btn" id="mPrev">◀</button>
+              <button class="btn" id="mNext">▶</button>
             </div>
           </div>
 
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
             <span class="chip"><span class="tinyDot" style="background:var(--puro)"></span>Puro</span>
             <span class="chip"><span class="tinyDot" style="background:var(--ciclo)"></span>Ciclo</span>
             <span class="chip"><span class="tinyDot" style="background:var(--other)"></span>Outros</span>
-            <span class="chip"><span class="tinyDot" style="background:rgba(52,211,153,.55)"></span>Treino</span>
+            <span class="chip"><span class="tinyDot" style="background:rgba(200,245,102,.5)"></span>Treino</span>
           </div>
 
-          <div class="calGrid" style="margin-top:12px">
-            <div class="dow">D</div><div class="dow">S</div><div class="dow">T</div><div class="dow">Q</div><div class="dow">Q</div><div class="dow">S</div><div class="dow">S</div>
+          <div class="calGrid" style="margin-top:14px">
+            <div class="dow">D</div><div class="dow">S</div><div class="dow">T</div>
+            <div class="dow">Q</div><div class="dow">Q</div><div class="dow">S</div><div class="dow">S</div>
           </div>
           <div class="calGrid" id="monthGrid"></div>
         </div>
 
-        <div class="card flat">
-          <div class="h2">Resumo rápido</div>
-          <div class="sub">Dias de treino, água e “puro” no mês selecionado</div>
-        </div>
-
+        <!-- Stats grid -->
         <div class="grid2">
           <div class="card flat">
-            <div class="sub">Treinos (mês)</div>
-            <div style="font-size:22px;font-weight:950;margin-top:6px" id="statTrainDays">—</div>
+            <div class="sub">Treinos no mês</div>
+            <div class="stat-val accent" id="statTrainDays">—</div>
             <div class="mini" id="statTrainStreak">Streak: —</div>
           </div>
           <div class="card flat">
-            <div class="sub">Puro (mês)</div>
-            <div style="font-size:22px;font-weight:950;margin-top:6px" id="statPuroDays">—</div>
+            <div class="sub">Dias "Puro"</div>
+            <div class="stat-val cyan" id="statPuroDays">—</div>
             <div class="mini" id="statProtocolNote">—</div>
           </div>
           <div class="card flat">
-            <div class="sub">Água total (mês)</div>
-            <div style="font-size:22px;font-weight:950;margin-top:6px" id="statWaterTotal">—</div>
+            <div class="sub">Água total (ml)</div>
+            <div class="stat-val amber" id="statWaterTotal">—</div>
             <div class="mini" id="statWaterAvg">Média/dia: —</div>
           </div>
           <div class="card flat">
-            <div class="sub">Dias com água registrada</div>
-            <div style="font-size:22px;font-weight:950;margin-top:6px" id="statWaterDays">—</div>
-            <div class="mini">Quanto mais consistente, melhor.</div>
+            <div class="sub">Dias c/ água</div>
+            <div class="stat-val" id="statWaterDays">—</div>
+            <div class="mini">Consistência é tudo.</div>
           </div>
         </div>
 
+        <!-- Tabela semanal -->
         <div class="card">
           <div class="row">
             <div>
-              <div class="h2">Tabela semanal (por exercício)</div>
+              <div class="h2">Tabela semanal</div>
               <div class="sub" id="weekLabel">—</div>
             </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn" id="wPrev" title="Semana anterior">◀</button>
-              <button class="btn" id="wNext" title="Próxima semana">▶</button>
+            <div style="display:flex;gap:6px">
+              <button class="btn" id="wPrev">◀</button>
+              <button class="btn" id="wNext">▶</button>
             </div>
           </div>
-          <div class="mini">Última execução do exercício no dia: <b>carga</b> + reps/séries. Toque na célula para abrir aquele dia.</div>
+          <div class="mini" style="margin-top:6px">Melhor carga do dia. Toque na célula para abrir aquele treino.</div>
 
           <div class="tableWrap" id="matrixWrap">
             <table id="matrixTable"></table>
@@ -451,199 +694,267 @@
         </div>
       </section>
 
-      <!-- BACKUP -->
+      <!-- ══ BACKUP ══ -->
       <section id="tab-backup" class="hidden">
         <div class="card">
           <div class="h2">Exportar CSV</div>
-          <div class="sub">Para importar no Google Sheets depois.</div>
-          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-            <button class="btn accent" id="exportTreinos">Exportar Log_Treinos</button>
-            <button class="btn accent" id="exportBio">Exportar Log_Bio</button>
+          <div class="sub" style="margin-top:2px">Compatível com Google Sheets e Excel</div>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn accent" id="exportTreinos">↓ Treinos</button>
+            <button class="btn accent" id="exportBio">↓ Bio</button>
           </div>
-          <div class="mini">Sheets → Arquivo → Importar → Enviar → escolher o CSV.</div>
+          <div class="mini">Sheets → Arquivo → Importar → Enviar → escolher CSV.</div>
         </div>
 
         <div class="card">
-          <div class="h2">Importar CSV (opcional)</div>
-          <div class="sub">Recuperar backup no aparelho.</div>
-          <div style="margin-top:12px">
-            <label>
-              <div class="sub">Importar Log_Treinos CSV</div>
-              <input type="file" id="importTreinos" accept=".csv,text/csv" />
-            </label>
+          <div class="h2">Importar CSV</div>
+          <div class="sub" style="margin-top:2px">Restaurar backup de outro aparelho</div>
+          <div style="margin-top:14px">
+            <div class="sub" style="margin-bottom:6px">Log de Treinos</div>
+            <input type="file" id="importTreinos" accept=".csv,text/csv" />
           </div>
           <div style="margin-top:12px">
-            <label>
-              <div class="sub">Importar Log_Bio CSV</div>
-              <input type="file" id="importBio" accept=".csv,text/csv" />
-            </label>
+            <div class="sub" style="margin-bottom:6px">Log Bio</div>
+            <input type="file" id="importBio" accept=".csv,text/csv" />
           </div>
-          <div class="mini">Import substitui/mescla dados por data. Faça export antes por segurança.</div>
+          <div class="mini">Importar mescla dados por data. Exporte antes por segurança.</div>
         </div>
 
         <div class="card">
-          <div class="h2">Limpar tudo</div>
-          <div class="sub">Remove os dados salvos no aparelho.</div>
-          <div style="margin-top:12px">
-            <button class="btn danger" id="wipeAll">Apagar dados locais</button>
+          <div class="h2">Armazenamento local</div>
+          <div class="sub" style="margin-top:2px" id="storageInfo">—</div>
+          <div class="storage-bar hidden" id="storageWarn">
+            ⚠ Armazenamento acima de 80%. Faça backup e limpe dados antigos.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="h2">Apagar dados</div>
+          <div class="sub" style="margin-top:2px">Remove todos os dados salvos neste aparelho.</div>
+          <div style="margin-top:14px">
+            <button class="btn danger" id="wipeAll">Apagar tudo</button>
           </div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- BAR SALVAR -->
+  <!-- ══ Bottom bar ══ -->
   <div class="bar">
     <div class="barInner">
       <div class="barCard">
         <div>
-          <div style="font-weight:950">SALVAR</div>
-          <div class="sub" id="saveHint">Dados de —</div>
+          <div class="barLabel">Salvar dia <span class="unsaved-dot" id="unsavedDot"></span></div>
+          <div class="barDate" id="saveHint">—</div>
         </div>
-        <button class="btn accent" id="saveBtn" style="padding:14px 16px;border-radius:18px">Salvar</button>
+        <button class="btn accent" id="saveBtn" style="padding:13px 18px;font-size:13px;border-radius:16px">Salvar</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal: Selecionar / Criar Exercício -->
+  <!-- ══ Modal: Selecionar Exercício ══ -->
   <div class="overlay" id="exModalOverlay" style="display:none">
     <div class="card modalCard">
       <div class="row">
         <div>
           <div class="h2">Adicionar exercício</div>
-          <div class="sub">Selecione um existente ou crie um novo</div>
+          <div class="sub">Busque ou crie um novo</div>
         </div>
-        <button class="btn" id="exModalClose" aria-label="Fechar">✕</button>
+        <button class="btn ghost" id="exModalClose" style="font-size:16px;padding:6px 10px">✕</button>
       </div>
 
       <div style="margin-top:12px">
-        <label>
-          <div class="sub">Buscar</div>
-          <input id="exSearch" placeholder="Ex: Supino, Agachamento..." />
-        </label>
-        <div class="mini">Toque em um exercício para adicionar (não duplica os do dia).</div>
+        <input id="exSearch" placeholder="Buscar exercício..." autocomplete="off" autocorrect="off" />
+        <div class="mini">Exercícios já adicionados hoje não aparecem.</div>
       </div>
 
       <div id="exList" class="list scroll"></div>
 
-      <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap">
-        <button class="btn soft" id="exAddNew">+ Novo exercício…</button>
+      <div class="divider"></div>
+
+      <!-- Campo inline para criar novo exercício -->
+      <div id="exNewRow" style="display:none;gap:8px;align-items:center">
+        <input id="exNewInput" placeholder="Nome do novo exercício..." autocomplete="off" autocorrect="off" style="flex:1" />
+        <button class="btn accent" id="exNewConfirm" style="white-space:nowrap">Criar</button>
+        <button class="btn" id="exNewCancel" style="padding:10px 12px">✕</button>
+      </div>
+
+      <div id="exNewRowToggle" style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn soft" id="exAddNew">+ Novo exercício</button>
         <button class="btn" id="exCancel">Cancelar</button>
       </div>
     </div>
   </div>
 
 <script>
-/** ============================
- *  Dados locais (offline)
- *  ============================ */
-const STORAGE_KEY = "gym_tracker_offline_v1";
-const $ = (id) => document.getElementById(id);
+/* ================================================================
+   GYM TRACKER — Melhorias v2
+   - Bug streak corrigido
+   - QuotaExceededError tratado
+   - Aviso de dados não salvos ao trocar data
+   - Importação mescla ao invés de sobrescrever
+   - getAllExercises com cache
+   - Loop de datas com UTC para evitar DST
+   - Resumo de treino na aba "Hoje"
+   - Indicador visual de alterações não salvas
+   ================================================================ */
 
+const STORAGE_KEY = "gym_tracker_offline_v1";
+const $ = id => document.getElementById(id);
+
+/* ─── Estado global ─── */
 const state = {
   tab: "today",
   dateISO: toISO(new Date()),
   db: loadDB(),
-  dashMonthISO: null, // yyyy-mm
-  weekStartISO: null  // monday ISO
+  dashMonthISO: null,
+  weekStartISO: null,
+  dirty: false,           // alterações não salvas no bio
+  _exCache: null,         // cache de exercícios
 };
 
-function showOverlay(on){ $("overlay").classList.toggle("show", !!on); }
-function toast(msg){
-  $("toastText").textContent = msg;
-  $("toast").classList.add("show");
-  setTimeout(()=> $("toast").classList.remove("show"), 1800);
-}
-
-function toISO(d){
+/* ─── Utilitários de data ─── */
+function toISO(d) {
   const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
-function isoPretty(iso){
-  if(!iso) return "—";
-  const [y,m,d] = iso.split("-");
+
+function isoPretty(iso) {
+  if (!iso) return "—";
+  const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
 }
-function monthPretty(ym){
-  const [y,m] = ym.split("-").map(Number);
-  const d = new Date(y, m-1, 1);
-  return d.toLocaleDateString("pt-BR", { month:"long", year:"numeric" }).replace(/^./, c=>c.toUpperCase());
+
+function monthPretty(ym) {
+  const [y, m] = ym.split("-").map(Number);
+  return new Date(y, m - 1, 1)
+    .toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+    .replace(/^./, c => c.toUpperCase());
 }
-function addDays(iso, days){
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate()+days);
-  return toISO(d);
+
+/** Soma dias usando UTC para evitar bugs de DST */
+function addDays(iso, days) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}-${String(dt.getUTCDate()).padStart(2, "0")}`;
 }
-function numOrEmpty(v){
-  if(v === "" || v === null || typeof v === "undefined") return "";
+
+function numOrEmpty(v) {
+  if (v === "" || v === null || v === undefined) return "";
   const n = Number(v);
   return Number.isFinite(n) ? n : "";
 }
-function sanitizeText(v){ return (v ?? "").toString(); }
 
-function loadDB(){
-  try{
+function sanitizeText(v) { return (v ?? "").toString(); }
+
+function escapeHtml(str) {
+  return (str ?? "").toString()
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+}
+
+/* ─── Banco de dados (localStorage) ─── */
+function loadDB() {
+  try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return { version: 1, bioByDate:{}, workoutsByDate:{} };
+    if (!raw) return { version: 1, bioByDate: {}, workoutsByDate: {} };
     const obj = JSON.parse(raw);
-    return {
-      version: 1,
-      bioByDate: obj.bioByDate || {},
-      workoutsByDate: obj.workoutsByDate || {},
-    };
-  }catch{
-    return { version: 1, bioByDate:{}, workoutsByDate:{} };
+    return { version: 1, bioByDate: obj.bioByDate || {}, workoutsByDate: obj.workoutsByDate || {} };
+  } catch {
+    return { version: 1, bioByDate: {}, workoutsByDate: {} };
   }
 }
-function saveDB(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.db));
+
+function saveDB() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.db));
+    state._exCache = null; // invalida cache ao salvar
+    return true;
+  } catch (e) {
+    if (e.name === "QuotaExceededError" || e.code === 22) {
+      toast("⚠ Armazenamento cheio! Exporte e limpe dados antigos.", "warn");
+      updateStorageInfo();
+      return false;
+    }
+    toast("Erro ao salvar: " + e.message, "err");
+    return false;
+  }
 }
 
-function setTab(tab){
+/* ─── UI helpers ─── */
+function showOverlay(on) { $("overlay").classList.toggle("show", !!on); }
+
+function toast(msg, type = "ok") {
+  $("toastText").textContent = msg;
+  const dot = $("toastDot");
+  dot.className = "toast-dot" + (type === "warn" ? " warn" : type === "err" ? " err" : "");
+  $("toast").classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => $("toast").classList.remove("show"), 2200);
+}
+
+function setDirty(dirty) {
+  state.dirty = dirty;
+  $("unsavedDot").classList.toggle("show", dirty);
+}
+
+/* ─── Tab ─── */
+function setTab(tab) {
   state.tab = tab;
-  document.querySelectorAll(".tabbtn").forEach(btn=>{
+  document.querySelectorAll(".tabbtn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
-
-  ["today","workout","dashboard","backup"].forEach(t=>{
+  ["today", "workout", "dashboard", "backup"].forEach(t => {
     $(`tab-${t}`).classList.toggle("hidden", t !== tab);
   });
-
-  if(tab === "dashboard"){
-    renderDashboard();
-  }
+  if (tab === "dashboard") renderDashboard();
+  if (tab === "today") renderTodayWorkoutSummary();
+  if (tab === "backup") updateStorageInfo();
 }
 
-function renderHeader(){
+/* ─── Header ─── */
+function renderHeader() {
   $("datePretty").textContent = isoPretty(state.dateISO);
   $("dateInput").value = state.dateISO;
-  $("saveHint").textContent = `Dados de ${isoPretty(state.dateISO)}`;
+  $("saveHint").textContent = isoPretty(state.dateISO);
 }
 
-function renderBio(){
+/* ─── Bio ─── */
+function renderBio() {
   const bio = state.db.bioByDate[state.dateISO] || {};
   $("bioWeight").value = bio.weight ?? "";
   $("bioWater").value = bio.water ?? "";
   $("bioProtocol").value = bio.protocol || "Puro";
   $("bioNotes").value = bio.notes || "";
+  setDirty(false);
 }
 
-function getPrevWeekMaxLoadMap(dateISO){
+/* ─── Resumo de treino na aba Hoje ─── */
+function renderTodayWorkoutSummary() {
+  const arr = state.db.workoutsByDate[state.dateISO] || [];
+  const count = arr.filter(w => (w.exercise || "").trim()).length;
+  $("todayWorkoutSummary").textContent = count > 0
+    ? `${count} exercício${count > 1 ? "s" : ""} registrado${count > 1 ? "s" : ""} hoje.`
+    : "Abra a aba Treino para registrar.";
+}
+
+/* ─── Workout ─── */
+function getPrevWeekMaxLoadMap(dateISO) {
   const prevISO = addDays(dateISO, -7);
   const arr = state.db.workoutsByDate[prevISO] || [];
   const map = {};
-  for(const w of arr){
+  for (const w of arr) {
     const ex = (w.exercise || "").trim();
     const load = Number(w.load);
-    if(!ex || !Number.isFinite(load)) continue;
-    if(map[ex] === undefined || load > map[ex]) map[ex] = load;
+    if (!ex || !Number.isFinite(load)) continue;
+    if (map[ex] === undefined || load > map[ex]) map[ex] = load;
   }
   return { prevISO, map };
 }
 
-function renderWorkout(){
+function renderWorkout() {
   const list = $("workoutList");
   list.innerHTML = "";
 
@@ -652,124 +963,180 @@ function renderWorkout(){
 
   const { prevISO, map } = getPrevWeekMaxLoadMap(state.dateISO);
 
-  workouts.forEach((w, idx)=>{
+  workouts.forEach((w, idx) => {
     const ex = sanitizeText(w.exercise).trim() || "Exercício";
-    const prevLoad = (map[ex] === undefined) ? null : map[ex];
+    const prevLoad = map[ex] ?? null;
+    const curLoad = Number(w.load);
+    const hasCur = Number.isFinite(curLoad) && curLoad > 0;
+    const hasPrev = prevLoad !== null && prevLoad > 0;
+
+    // Barra de progresso (%)
+    let pct = 0;
+    if (hasCur && hasPrev) pct = Math.min(100, Math.round((curLoad / prevLoad) * 100));
+    else if (hasCur) pct = 100;
 
     const el = document.createElement("div");
     el.className = "item";
     el.innerHTML = `
       <div class="itemTop">
-        <div>
+        <div style="min-width:0">
           <p class="itemName" title="${escapeHtml(ex)}">${escapeHtml(ex)}</p>
-          <div class="prev">Semana anterior (${isoPretty(prevISO)}): <b>${prevLoad === null ? "—" : (prevLoad + " kg")}</b></div>
+          <div class="prev">
+            Semana anterior (${isoPretty(prevISO)}):
+            <b>${prevLoad === null ? "—" : prevLoad + " kg"}</b>
+          </div>
         </div>
-        <button class="btn danger" data-action="remove" data-idx="${idx}" style="padding:8px 10px">Remover</button>
+        <button class="btn danger" data-action="remove" data-idx="${idx}" style="padding:7px 10px;font-size:11px">Remover</button>
       </div>
+
+      ${hasCur || hasPrev ? `
+        <div class="load-bar-wrap">
+          <div class="load-bar" style="width:${pct}%"></div>
+        </div>
+        <div class="mini" style="text-align:right;margin-top:0">${pct}% da carga anterior</div>
+      ` : ""}
 
       <div class="grid3">
         <label>
-          <div class="sub">Carga (kg)</div>
-          <input inputmode="decimal" data-field="load" data-idx="${idx}" value="${w.load ?? ""}" placeholder="0" />
+          <div class="sub" style="margin-bottom:5px">Carga (kg)</div>
+          <input inputmode="decimal" data-field="load" data-idx="${idx}" value="${w.load ?? ""}" placeholder="0" autocomplete="off" />
         </label>
         <label>
-          <div class="sub">Reps</div>
-          <input inputmode="numeric" data-field="reps" data-idx="${idx}" value="${w.reps ?? ""}" placeholder="0" />
+          <div class="sub" style="margin-bottom:5px">Reps</div>
+          <input inputmode="numeric" data-field="reps" data-idx="${idx}" value="${w.reps ?? ""}" placeholder="0" autocomplete="off" />
         </label>
         <label>
-          <div class="sub">Séries</div>
-          <input inputmode="numeric" data-field="sets" data-idx="${idx}" value="${w.sets ?? ""}" placeholder="0" />
+          <div class="sub" style="margin-bottom:5px">Séries</div>
+          <input inputmode="numeric" data-field="sets" data-idx="${idx}" value="${w.sets ?? ""}" placeholder="0" autocomplete="off" />
         </label>
       </div>
     `;
     list.appendChild(el);
   });
 
-  // remove
-  list.querySelectorAll('button[data-action="remove"]').forEach(btn=>{
-    btn.addEventListener("click", ()=>{
+  // Remover
+  list.querySelectorAll('button[data-action="remove"]').forEach(btn => {
+    btn.addEventListener("click", () => {
       const i = Number(btn.dataset.idx);
       const arr = state.db.workoutsByDate[state.dateISO] || [];
-      arr.splice(i,1);
+      arr.splice(i, 1);
       state.db.workoutsByDate[state.dateISO] = arr;
       saveDB();
       renderWorkout();
-      toast("Removido.");
-      if(state.tab === "dashboard") renderDashboard();
+      toast("Exercício removido.");
     });
   });
 
-  // inputs
-  list.querySelectorAll("input[data-field]").forEach(inp=>{
-    inp.addEventListener("input", ()=>{
+  // Inputs (salvamento automático + atualiza barra)
+  list.querySelectorAll("input[data-field]").forEach(inp => {
+    inp.addEventListener("input", () => {
       const idx = Number(inp.dataset.idx);
       const field = inp.dataset.field;
       const arr = state.db.workoutsByDate[state.dateISO] || [];
-      if(!arr[idx]) return;
+      if (!arr[idx]) return;
       arr[idx][field] = numOrEmpty(inp.value);
       state.db.workoutsByDate[state.dateISO] = arr;
       saveDB();
+      // Atualiza só a barra de progresso deste item
+      if (field === "load") {
+        const item = inp.closest(".item");
+        const prevLoad = map[(arr[idx].exercise || "").trim()] ?? null;
+        const curLoad = Number(inp.value);
+        if (item && Number.isFinite(curLoad) && curLoad > 0 && prevLoad !== null && prevLoad > 0) {
+          const pct = Math.min(100, Math.round((curLoad / prevLoad) * 100));
+          const bar = item.querySelector(".load-bar");
+          const lbl = item.querySelector(".mini");
+          if (bar) bar.style.width = pct + "%";
+          if (lbl) lbl.textContent = pct + "% da carga anterior";
+        }
+      }
     });
   });
 }
 
-function collectAndSave(){
+/* ─── Salvar (botão) ─── */
+function collectAndSave() {
   showOverlay(true);
-  try{
+  try {
     state.db.bioByDate[state.dateISO] = {
       weight: numOrEmpty($("bioWeight").value),
       water: numOrEmpty($("bioWater").value),
       protocol: sanitizeText($("bioProtocol").value || "Puro"),
       notes: sanitizeText($("bioNotes").value || ""),
     };
-    if(!Array.isArray(state.db.workoutsByDate[state.dateISO])){
+    if (!Array.isArray(state.db.workoutsByDate[state.dateISO])) {
       state.db.workoutsByDate[state.dateISO] = [];
     }
-    saveDB();
-    toast("Salvo!");
-    if(state.tab === "dashboard") renderDashboard();
+    const ok = saveDB();
+    if (ok) {
+      toast("Salvo!");
+      setDirty(false);
+    }
+    if (state.tab === "dashboard") renderDashboard();
+    renderTodayWorkoutSummary();
   } finally {
-    setTimeout(()=> showOverlay(false), 250);
+    setTimeout(() => showOverlay(false), 280);
   }
 }
 
-/** ============================
- *  Picker de exercícios (melhoria)
- *  ============================ */
-function getAllExercises(){
-  const set = new Set();
-  Object.values(state.db.workoutsByDate).forEach(arr=>{
-    (arr || []).forEach(w=>{
-      const ex = (w.exercise || "").trim();
-      if(ex) set.add(ex);
-    });
-  });
-  return [...set].sort((a,b)=>a.localeCompare(b));
+/* ─── Trocar data com aviso se dirty ─── */
+function changeDate(newISO) {
+  if (!newISO) return;
+  if (state.dirty) {
+    const ok = confirm("Você tem alterações não salvas. Deseja descartar e trocar de data?");
+    if (!ok) {
+      // Reverte o input de data
+      $("dateInput").value = state.dateISO;
+      return;
+    }
+  }
+  state.dateISO = newISO;
+  renderHeader();
+  renderBio();
+  renderWorkout();
+  renderTodayWorkoutSummary();
+  if (state.tab === "dashboard") renderDashboard();
 }
 
-function addExercise(){ openExerciseModal(); }
+/* ─── Picker de exercícios ─── */
+function getAllExercises() {
+  if (state._exCache) return state._exCache;
+  const set = new Set();
+  for (const arr of Object.values(state.db.workoutsByDate)) {
+    for (const w of (arr || [])) {
+      const ex = (w.exercise || "").trim();
+      if (ex) set.add(ex);
+    }
+  }
+  state._exCache = [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return state._exCache;
+}
 
-function addExerciseByName(exName){
+function addExerciseByName(exName) {
   const ex = (exName || "").trim();
-  if(!ex) return;
+  if (!ex) return;
   const arr = state.db.workoutsByDate[state.dateISO] || [];
   arr.push({ exercise: ex, load: "", reps: "", sets: "" });
   state.db.workoutsByDate[state.dateISO] = arr;
+  state._exCache = null;
   saveDB();
   renderWorkout();
-  if(state.tab === "dashboard") renderDashboard();
+  renderTodayWorkoutSummary();
 }
 
-function openExerciseModal(){
-  const overlay = $("exModalOverlay");
-  overlay.style.display = "flex";
+function openExerciseModal() {
+  $("exModalOverlay").style.display = "flex";
   $("exSearch").value = "";
   renderExerciseModalList("");
-  setTimeout(()=> $("exSearch").focus(), 50);
+  setTimeout(() => $("exSearch").focus(), 60);
 }
-function closeExerciseModal(){ $("exModalOverlay").style.display = "none"; }
+function closeExerciseModal() {
+  $("exModalOverlay").style.display = "none";
+  $("exNewRow").style.display = "none";
+  $("exNewRowToggle").style.display = "flex";
+}
 
-function renderExerciseModalList(filterText){
+function renderExerciseModalList(filterText) {
   const list = $("exList");
   list.innerHTML = "";
 
@@ -784,115 +1151,100 @@ function renderExerciseModalList(filterText){
     .filter(ex => !filter || ex.toLowerCase().includes(filter))
     .slice(0, 60);
 
-  if(shown.length === 0){
-    const empty = document.createElement("div");
-    empty.className = "sub";
-    empty.textContent = filter
-      ? "Nenhum encontrado. Use “+ Novo exercício…”"
-      : "Nenhum exercício salvo ainda. Use “+ Novo exercício…”";
-    list.appendChild(empty);
+  if (shown.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state" style="padding:16px">
+        <p>${filter ? 'Nenhum resultado. Use <strong>+ Novo exercício</strong>' : 'Nenhum exercício salvo. Crie o primeiro!'}</p>
+      </div>`;
     return;
   }
 
-  shown.forEach(ex=>{
+  shown.forEach(ex => {
     const item = document.createElement("div");
     item.className = "item";
     item.style.cursor = "pointer";
     item.innerHTML = `
       <div class="row">
-        <div style="font-weight:950">${escapeHtml(ex)}</div>
-        <div class="sub">Adicionar</div>
+        <div style="font-family:var(--font-head);font-weight:800;font-size:13px">${escapeHtml(ex)}</div>
+        <div class="sub" style="color:var(--accent);font-size:11px">+ Add</div>
       </div>`;
-    item.addEventListener("click", ()=>{
+    item.addEventListener("click", () => {
       addExerciseByName(ex);
       closeExerciseModal();
-      toast("Exercício adicionado.");
+      toast("Adicionado: " + ex);
     });
     list.appendChild(item);
   });
 }
 
-/** ============================
- *  Dashboard
- *  ============================ */
-function isTrainedDay(dateISO){
-  const arr = state.db.workoutsByDate[dateISO] || [];
-  return arr.some(w => (w.exercise || "").trim() !== "");
+/* ─── Dashboard ─── */
+function isTrainedDay(dateISO) {
+  return (state.db.workoutsByDate[dateISO] || []).some(w => (w.exercise || "").trim() !== "");
 }
-function protocolClassForDate(dateISO){
+
+function protocolClassForDate(dateISO) {
   const bio = state.db.bioByDate[dateISO];
-  if(!bio || !bio.protocol) return null;
+  if (!bio || !bio.protocol) return null;
   const p = (bio.protocol || "").trim().toLowerCase();
-  if(!p) return null;
-  if(p === "puro") return "puro";
-  if(p === "ciclo") return "ciclo";
+  if (p === "puro") return "puro";
+  if (p === "ciclo") return "ciclo";
   return "other";
 }
-function getMondayISO(dateISO){
-  const d = new Date(dateISO + "T00:00:00");
-  const day = d.getDay(); // 0 dom
-  const diff = (day === 0 ? -6 : (1 - day));
-  d.setDate(d.getDate() + diff);
-  return toISO(d);
+
+function getMondayISO(dateISO) {
+  const [y, m, d] = dateISO.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const dow = dt.getUTCDay(); // 0 = dom
+  const diff = dow === 0 ? -6 : 1 - dow;
+  return addDays(dateISO, diff);
 }
 
-function renderDashboard(){
-  if(!state.dashMonthISO) state.dashMonthISO = state.dateISO.slice(0,7);
-  if(!state.weekStartISO) state.weekStartISO = getMondayISO(state.dateISO);
-
+function renderDashboard() {
+  if (!state.dashMonthISO) state.dashMonthISO = state.dateISO.slice(0, 7);
+  if (!state.weekStartISO) state.weekStartISO = getMondayISO(state.dateISO);
   $("dashSub").textContent = monthPretty(state.dashMonthISO);
-
   renderMonthCalendar();
   renderMonthStats();
   renderWeekMatrix();
 }
 
-function renderMonthCalendar(){
-  const [y,m] = state.dashMonthISO.split("-").map(Number);
-  const first = new Date(y, m-1, 1);
-  const daysInMonth = new Date(y, m, 0).getDate();
+function renderMonthCalendar() {
+  const [y, m] = state.dashMonthISO.split("-").map(Number);
+  const first = new Date(Date.UTC(y, m - 1, 1));
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const startDow = first.getUTCDay();
+  const prevMonthDays = new Date(Date.UTC(y, m - 1, 0)).getUTCDate();
 
-  const startDow = first.getDay(); // 0 dom
   const grid = $("monthGrid");
   grid.innerHTML = "";
 
-  const prevMonthDays = new Date(y, m-1, 0).getDate();
-  for(let i=0; i<startDow; i++){
-    const dayNum = prevMonthDays - (startDow - 1 - i);
+  for (let i = 0; i < startDow; i++) {
     const cell = document.createElement("div");
     cell.className = "calCell dim";
-    cell.textContent = dayNum;
+    cell.textContent = prevMonthDays - (startDow - 1 - i);
     grid.appendChild(cell);
   }
 
-  for(let day=1; day<=daysInMonth; day++){
-    const dateISO = `${y}-${String(m).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
-    const cell = document.createElement("div");
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateISO = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const isToday = dateISO === toISO(new Date());
     const trained = isTrainedDay(dateISO);
     const pClass = protocolClassForDate(dateISO);
 
+    const cell = document.createElement("div");
     cell.className = "calCell" + (isToday ? " today" : "") + (trained ? " trained" : "");
-    cell.textContent = day;
+    cell.innerHTML = `<span>${day}</span><div class="badgeDot ${pClass || ''}"></div>`;
 
-    const dot = document.createElement("div");
-    dot.className = "badgeDot" + (pClass ? (" " + pClass) : "");
-    cell.appendChild(dot);
-
-    cell.addEventListener("click", ()=>{
-      state.dateISO = dateISO;
-      renderHeader();
-      renderBio();
-      renderWorkout();
-      toast("Data selecionada: " + isoPretty(dateISO));
+    cell.addEventListener("click", () => {
+      changeDate(dateISO);
+      toast("Data: " + isoPretty(dateISO));
     });
-
     grid.appendChild(cell);
   }
 
   const total = startDow + daysInMonth;
-  const remaining = (total <= 35) ? (35 - total) : (42 - total);
-  for(let i=1;i<=remaining;i++){
+  const remaining = total <= 35 ? (35 - total) : (42 - total);
+  for (let i = 1; i <= remaining; i++) {
     const cell = document.createElement("div");
     cell.className = "calCell dim";
     cell.textContent = i;
@@ -900,96 +1252,83 @@ function renderMonthCalendar(){
   }
 }
 
-function renderMonthStats(){
-  const [y,m] = state.dashMonthISO.split("-").map(Number);
-  const startISO = `${y}-${String(m).padStart(2,"0")}-01`;
-  const endDay = new Date(y, m, 0).getDate();
-  const endISO = `${y}-${String(m).padStart(2,"0")}-${String(endDay).padStart(2,"0")}`;
+function renderMonthStats() {
+  const [y, m] = state.dashMonthISO.split("-").map(Number);
+  const startISO = `${y}-${String(m).padStart(2, "0")}-01`;
+  const endDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const endISO = `${y}-${String(m).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
 
-  let trainDays = 0;
-  let puroDays = 0;
-  let waterTotal = 0;
-  let waterDays = 0;
-  let protocolCount = { puro:0, ciclo:0, other:0, none:0 };
+  let trainDays = 0, puroDays = 0, waterTotal = 0, waterDays = 0;
+  let cntCiclo = 0, cntOther = 0, cntNone = 0;
 
-  for(let d = startISO; d <= endISO; d = addDays(d, 1)){
-    if(isTrainedDay(d)) trainDays++;
-
+  for (let d = startISO; d <= endISO; d = addDays(d, 1)) {
+    if (isTrainedDay(d)) trainDays++;
     const p = protocolClassForDate(d);
-    if(!p) protocolCount.none++;
-    else protocolCount[p]++;
-
-    if(p === "puro") puroDays++;
+    if (!p) cntNone++;
+    else if (p === "puro") puroDays++;
+    else if (p === "ciclo") cntCiclo++;
+    else cntOther++;
 
     const bio = state.db.bioByDate[d];
-    if(bio && bio.water !== "" && bio.water !== null && typeof bio.water !== "undefined"){
+    if (bio && bio.water !== "" && bio.water !== null && bio.water !== undefined) {
       const w = Number(bio.water);
-      if(Number.isFinite(w)){
-        waterTotal += w;
-        waterDays++;
-      }
+      if (Number.isFinite(w)) { waterTotal += w; waterDays++; }
     }
   }
 
+  /* ── Streak corrigido ──
+     Percorre do dia atual (ou último do mês, o que for menor) para trás.
+     Conta dias consecutivos com treino. Se hoje ainda não tem treino,
+     começa a verificar a partir de ontem para não quebrar o streak. */
   let streak = 0;
-  const today = toISO(new Date());
-  let cursor = (today < endISO) ? today : endISO;
-  if(cursor >= startISO){
-    for(let d = cursor; d >= startISO; d = addDays(d, -1)){
-      if(isTrainedDay(d)) streak++;
-      else break;
-    }
+  const todayISO = toISO(new Date());
+  let cursor = todayISO < endISO ? todayISO : endISO;
+
+  // Se o cursor ainda não tem treino E está dentro do mês, tenta o dia anterior
+  if (cursor >= startISO && !isTrainedDay(cursor)) {
+    cursor = addDays(cursor, -1);
+  }
+
+  while (cursor >= startISO) {
+    if (isTrainedDay(cursor)) { streak++; cursor = addDays(cursor, -1); }
+    else break;
   }
 
   $("statTrainDays").textContent = trainDays;
   $("statTrainStreak").textContent = `Streak: ${streak} dia(s)`;
   $("statPuroDays").textContent = puroDays;
-
-  $("statProtocolNote").textContent = `Ciclo: ${protocolCount.ciclo} • Outros: ${protocolCount.other} • Sem: ${protocolCount.none}`;
-
-  $("statWaterTotal").textContent = waterTotal ? String(waterTotal) : "0";
+  $("statProtocolNote").textContent = `Ciclo: ${cntCiclo} · Outros: ${cntOther} · Sem: ${cntNone}`;
+  $("statWaterTotal").textContent = waterTotal || 0;
   $("statWaterDays").textContent = waterDays;
-  const avg = waterDays ? Math.round(waterTotal / waterDays) : 0;
-  $("statWaterAvg").textContent = `Média/dia: ${avg}`;
+  $("statWaterAvg").textContent = `Média/dia: ${waterDays ? Math.round(waterTotal / waterDays) : 0}`;
 }
 
-function getWorkoutCellSummary(dateISO, exercise){
+function getWorkoutCellSummary(dateISO, exercise) {
   const arr = state.db.workoutsByDate[dateISO] || [];
   let best = null;
-
-  for(const w of arr){
-    const ex = (w.exercise || "").trim();
-    if(ex.toLowerCase() !== exercise.toLowerCase()) continue;
-
+  for (const w of arr) {
+    if ((w.exercise || "").trim().toLowerCase() !== exercise.toLowerCase()) continue;
     const load = Number(w.load);
-    const reps = Number(w.reps);
-    const sets = Number(w.sets);
-    const loadOk = Number.isFinite(load) ? load : null;
-
-    if(!best){
-      best = { load: loadOk, reps: Number.isFinite(reps)?reps:null, sets: Number.isFinite(sets)?sets:null };
-    } else {
-      if(loadOk !== null && (best.load === null || loadOk > best.load)){
-        best = { load: loadOk, reps: Number.isFinite(reps)?reps:null, sets: Number.isFinite(sets)?sets:null };
-      }
+    const ok = Number.isFinite(load);
+    if (!best || (ok && (best.load === null || load > best.load))) {
+      best = {
+        load: ok ? load : null,
+        reps: Number.isFinite(Number(w.reps)) ? Number(w.reps) : null,
+        sets: Number.isFinite(Number(w.sets)) ? Number(w.sets) : null,
+      };
     }
   }
-  if(!best) return null;
-
-  const parts = [];
-  parts.push(best.load === null ? "—kg" : `${best.load}kg`);
-  const r = best.reps === null ? "—" : best.reps;
-  const s = best.sets === null ? "—" : best.sets;
-  parts.push(`${r}x${s}`);
-  return parts.join(" • ");
+  if (!best) return null;
+  const kg = best.load === null ? "—kg" : `${best.load}kg`;
+  const r = best.reps ?? "—";
+  const s = best.sets ?? "—";
+  return `${kg} · ${r}×${s}`;
 }
 
-function renderWeekMatrix(){
+function renderWeekMatrix() {
   const start = state.weekStartISO;
-  const days = [];
-  for(let i=0;i<7;i++) days.push(addDays(start, i));
-  const end = days[6];
-  $("weekLabel").textContent = `${isoPretty(start)} → ${isoPretty(end)}`;
+  const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  $("weekLabel").textContent = `${isoPretty(start)} → ${isoPretty(days[6])}`;
 
   const exercises = getAllExercises();
   const table = $("matrixTable");
@@ -1001,254 +1340,218 @@ function renderWeekMatrix(){
   th0.textContent = "Exercício";
   trh.appendChild(th0);
 
-  const dow = ["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"];
-  days.forEach((d, idx)=>{
+  const dow = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  days.forEach((d, i) => {
     const th = document.createElement("th");
-    th.textContent = `${dow[idx]} (${d.slice(8,10)})`;
+    th.textContent = `${dow[i]} ${d.slice(8, 10)}`;
     trh.appendChild(th);
   });
   thead.appendChild(trh);
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
-
-  if(exercises.length === 0){
+  if (exercises.length === 0) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
     td.colSpan = 8;
-    td.innerHTML = `<span class="cellEmpty">Sem exercícios ainda. Registre um treino para a tabela aparecer.</span>`;
-    tr.appendChild(td);
-    tbody.appendChild(tr);
+    td.innerHTML = `<span class="cellEmpty">Sem exercícios. Registre um treino primeiro.</span>`;
+    tr.appendChild(td); tbody.appendChild(tr);
     table.appendChild(tbody);
     return;
   }
 
-  exercises.forEach(ex=>{
+  exercises.forEach(ex => {
     const tr = document.createElement("tr");
     const td0 = document.createElement("td");
-    td0.title = ex;
-    td0.textContent = ex;
+    td0.title = ex; td0.textContent = ex;
     tr.appendChild(td0);
 
-    days.forEach(d=>{
+    days.forEach(d => {
       const td = document.createElement("td");
       const sum = getWorkoutCellSummary(d, ex);
-
-      if(!sum) td.innerHTML = `<span class="cellEmpty">—</span>`;
-      else td.textContent = sum;
-
-      td.style.cursor = "pointer";
-      td.addEventListener("click", ()=>{
-        state.dateISO = d;
-        renderHeader();
-        renderBio();
-        renderWorkout();
+      td.innerHTML = sum ? `<span class="cellFill">${escapeHtml(sum)}</span>` : `<span class="cellEmpty">—</span>`;
+      td.addEventListener("click", () => {
+        changeDate(d);
         setTab("workout");
-        toast("Abrindo treino de " + isoPretty(d));
+        toast("Treino de " + isoPretty(d));
       });
-
       tr.appendChild(td);
     });
-
     tbody.appendChild(tr);
   });
-
   table.appendChild(tbody);
 }
 
-/** ============================
- *  CSV Backup
- *  ============================ */
-function csvEscape(v){
+/* ─── Storage info ─── */
+function updateStorageInfo() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY) || "";
+    const kb = (raw.length * 2 / 1024).toFixed(1);
+    const pct = Math.round((raw.length * 2) / (5 * 1024 * 1024) * 100);
+    $("storageInfo").textContent = `~${kb} KB usados (~${pct}% do limite de 5 MB).`;
+    $("storageWarn").classList.toggle("hidden", pct < 80);
+  } catch {
+    $("storageInfo").textContent = "Não foi possível verificar.";
+  }
+}
+
+/* ─── CSV Backup ─── */
+function csvEscape(v) {
   const s = (v ?? "").toString();
-  if(/[",\n;]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+  if (/[",\n;]/.test(s)) return `"${s.replaceAll('"', '""')}"`;
   return s;
 }
-function downloadText(filename, text){
-  const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+function downloadText(filename, text) {
+  const blob = new Blob(["\uFEFF" + text], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  const a = Object.assign(document.createElement("a"), { href: url, download: filename });
+  document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
-function exportTreinosCSV(){
-  const rows = [["Data","Exercício","Carga","Repetições","Séries"]];
-  const dates = Object.keys(state.db.workoutsByDate).sort();
-  dates.forEach(dateISO=>{
-    const arr = state.db.workoutsByDate[dateISO] || [];
-    arr.forEach(w=>{
+
+function exportTreinosCSV() {
+  const rows = [["Data", "Exercício", "Carga", "Repetições", "Séries"]];
+  Object.keys(state.db.workoutsByDate).sort().forEach(dateISO => {
+    (state.db.workoutsByDate[dateISO] || []).forEach(w => {
       rows.push([dateISO, sanitizeText(w.exercise), w.load ?? "", w.reps ?? "", w.sets ?? ""]);
     });
   });
-  const csv = rows.map(r => r.map(csvEscape).join(";")).join("\n");
-  downloadText(`Log_Treinos_${toISO(new Date())}.csv`, csv);
-  toast("CSV de treinos exportado!");
+  downloadText(`Log_Treinos_${toISO(new Date())}.csv`, rows.map(r => r.map(csvEscape).join(";")).join("\n"));
+  toast("Treinos exportados!");
 }
-function exportBioCSV(){
-  const rows = [["Data","Peso Corporal","Água","Protocolo/Substância","Observações"]];
-  const dates = Object.keys(state.db.bioByDate).sort();
-  dates.forEach(dateISO=>{
+
+function exportBioCSV() {
+  const rows = [["Data", "Peso Corporal", "Água", "Protocolo/Substância", "Observações"]];
+  Object.keys(state.db.bioByDate).sort().forEach(dateISO => {
     const b = state.db.bioByDate[dateISO] || {};
     rows.push([dateISO, b.weight ?? "", b.water ?? "", sanitizeText(b.protocol), sanitizeText(b.notes)]);
   });
-  const csv = rows.map(r => r.map(csvEscape).join(";")).join("\n");
-  downloadText(`Log_Bio_${toISO(new Date())}.csv`, csv);
-  toast("CSV de bio exportado!");
+  downloadText(`Log_Bio_${toISO(new Date())}.csv`, rows.map(r => r.map(csvEscape).join(";")).join("\n"));
+  toast("Bio exportado!");
 }
 
-function parseCSV(text){
-  const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-  const out = [];
-  for(const line of lines){
-    const row = [];
-    let cur = "", inQ = false;
-    for(let i=0;i<line.length;i++){
+function parseCSV(text) {
+  const sep = text.includes(";") ? ";" : ",";
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  return lines.map(line => {
+    const row = []; let cur = "", inQ = false;
+    for (let i = 0; i < line.length; i++) {
       const ch = line[i];
-      if(ch === '"'){
-        if(inQ && line[i+1] === '"'){ cur += '"'; i++; }
-        else inQ = !inQ;
-      } else if(ch === ";" && !inQ){
-        row.push(cur); cur = "";
-      } else cur += ch;
+      if (ch === '"') { if (inQ && line[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (ch === sep && !inQ) { row.push(cur); cur = ""; }
+      else cur += ch;
     }
     row.push(cur);
-    out.push(row);
-  }
-  return out;
+    return row;
+  });
 }
-function importTreinosCSVFile(file){
+
+function importTreinosCSVFile(file) {
   const reader = new FileReader();
   reader.onload = () => {
-    try{
+    try {
       const rows = parseCSV(reader.result);
       const header = rows.shift() || [];
-      const idxDate = header.indexOf("Data");
-      const idxEx = header.indexOf("Exercício");
-      const idxLoad = header.indexOf("Carga");
-      const idxReps = header.indexOf("Repetições");
-      const idxSets = header.indexOf("Séries");
-      if(idxDate < 0 || idxEx < 0) throw new Error("CSV inválido (cabeçalho).");
+      const iDate = header.indexOf("Data"), iEx = header.indexOf("Exercício");
+      const iLoad = header.indexOf("Carga"), iReps = header.indexOf("Repetições"), iSets = header.indexOf("Séries");
+      if (iDate < 0 || iEx < 0) throw new Error("Cabeçalho inválido.");
 
-      const map = {};
-      for(const r of rows){
-        const dateISO = (r[idxDate] || "").trim();
-        const ex = (r[idxEx] || "").trim();
-        if(!dateISO || !ex) continue;
-        if(!map[dateISO]) map[dateISO] = [];
-        map[dateISO].push({
-          exercise: ex,
-          load: numOrEmpty(r[idxLoad]),
-          reps: numOrEmpty(r[idxReps]),
-          sets: numOrEmpty(r[idxSets]),
-        });
+      // MESCLA: não sobrescreve dias inteiros
+      for (const r of rows) {
+        const dateISO = (r[iDate] || "").trim();
+        const ex = (r[iEx] || "").trim();
+        if (!dateISO || !ex) continue;
+        if (!state.db.workoutsByDate[dateISO]) state.db.workoutsByDate[dateISO] = [];
+        // Evita duplicar exercícios do mesmo dia
+        const existing = state.db.workoutsByDate[dateISO];
+        const dup = existing.findIndex(w => (w.exercise || "").trim() === ex);
+        const entry = { exercise: ex, load: numOrEmpty(r[iLoad]), reps: numOrEmpty(r[iReps]), sets: numOrEmpty(r[iSets]) };
+        if (dup >= 0) existing[dup] = entry;
+        else existing.push(entry);
       }
-      Object.keys(map).forEach(d=> state.db.workoutsByDate[d] = map[d]);
-      saveDB();
-      renderWorkout();
-      if(state.tab === "dashboard") renderDashboard();
+
+      state._exCache = null;
+      saveDB(); renderWorkout();
+      if (state.tab === "dashboard") renderDashboard();
       toast("Treinos importados!");
-    } catch(e){
-      toast("Falha ao importar treinos: " + (e.message || e));
-    }
+    } catch (e) { toast("Erro ao importar: " + e.message, "err"); }
   };
   reader.readAsText(file, "utf-8");
 }
-function importBioCSVFile(file){
+
+function importBioCSVFile(file) {
   const reader = new FileReader();
   reader.onload = () => {
-    try{
+    try {
       const rows = parseCSV(reader.result);
       const header = rows.shift() || [];
-      const idxDate = header.indexOf("Data");
-      const idxW = header.indexOf("Peso Corporal");
-      const idxWater = header.indexOf("Água");
-      const idxProt = header.indexOf("Protocolo/Substância");
-      const idxNotes = header.indexOf("Observações");
-      if(idxDate < 0) throw new Error("CSV inválido (cabeçalho).");
+      const iDate = header.indexOf("Data"), iW = header.indexOf("Peso Corporal");
+      const iWater = header.indexOf("Água"), iProt = header.indexOf("Protocolo/Substância");
+      const iNotes = header.indexOf("Observações");
+      if (iDate < 0) throw new Error("Cabeçalho inválido.");
 
-      for(const r of rows){
-        const dateISO = (r[idxDate] || "").trim();
-        if(!dateISO) continue;
+      for (const r of rows) {
+        const dateISO = (r[iDate] || "").trim();
+        if (!dateISO) continue;
+        // Mescla: mantém campos existentes se não houver dado no CSV
+        const existing = state.db.bioByDate[dateISO] || {};
         state.db.bioByDate[dateISO] = {
-          weight: numOrEmpty(r[idxW]),
-          water: numOrEmpty(r[idxWater]),
-          protocol: sanitizeText(r[idxProt] || "Puro"),
-          notes: sanitizeText(r[idxNotes] || ""),
+          weight:   numOrEmpty(r[iW])    !== "" ? numOrEmpty(r[iW])   : existing.weight,
+          water:    numOrEmpty(r[iWater]) !== "" ? numOrEmpty(r[iWater]) : existing.water,
+          protocol: sanitizeText(r[iProt] || existing.protocol || "Puro"),
+          notes:    sanitizeText(r[iNotes] || existing.notes || ""),
         };
       }
-      saveDB();
-      renderBio();
-      if(state.tab === "dashboard") renderDashboard();
+
+      saveDB(); renderBio();
+      if (state.tab === "dashboard") renderDashboard();
       toast("Bio importado!");
-    } catch(e){
-      toast("Falha ao importar bio: " + (e.message || e));
-    }
+    } catch (e) { toast("Erro ao importar: " + e.message, "err"); }
   };
   reader.readAsText(file, "utf-8");
 }
-function wipeAll(){
-  const ok = confirm("Tem certeza? Isso apaga tudo salvo no aparelho.");
-  if(!ok) return;
+
+function wipeAll() {
+  if (!confirm("Tem certeza? Isso apaga todos os dados do aparelho.\n\nFaça um backup antes!")) return;
   localStorage.removeItem(STORAGE_KEY);
   state.db = loadDB();
-  renderBio();
-  renderWorkout();
-  if(state.tab === "dashboard") renderDashboard();
+  state._exCache = null;
+  renderBio(); renderWorkout();
+  if (state.tab === "dashboard") renderDashboard();
+  updateStorageInfo();
   toast("Dados apagados.");
 }
 
-function escapeHtml(str){
-  return (str ?? "").toString()
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-/** ============================
- *  Eventos
- *  ============================ */
-document.querySelectorAll(".tabbtn").forEach(btn=>{
-  btn.addEventListener("click", ()=> setTab(btn.dataset.tab));
+/* ─── Eventos ─── */
+document.querySelectorAll(".tabbtn").forEach(btn => {
+  btn.addEventListener("click", () => setTab(btn.dataset.tab));
 });
 
-$("dateInput").addEventListener("change", ()=>{
-  const iso = $("dateInput").value;
-  if(!iso) return;
-  state.dateISO = iso;
-  renderHeader();
-  renderBio();
-  renderWorkout();
-  if(state.tab === "dashboard") renderDashboard();
-});
-
+$("dateInput").addEventListener("change", e => changeDate(e.target.value));
 $("saveBtn").addEventListener("click", collectAndSave);
-$("addExerciseBtn").addEventListener("click", addExercise);
-$("goWorkout").addEventListener("click", ()=> setTab("workout"));
+$("addExerciseBtn").addEventListener("click", openExerciseModal);
+$("goWorkout").addEventListener("click", () => setTab("workout"));
 
 $("exportTreinos").addEventListener("click", exportTreinosCSV);
 $("exportBio").addEventListener("click", exportBioCSV);
 
-$("importTreinos").addEventListener("change", (e)=>{
-  const file = e.target.files?.[0];
-  if(file) importTreinosCSVFile(file);
+$("importTreinos").addEventListener("change", e => {
+  const f = e.target.files?.[0];
+  if (f) importTreinosCSVFile(f);
   e.target.value = "";
 });
-$("importBio").addEventListener("change", (e)=>{
-  const file = e.target.files?.[0];
-  if(file) importBioCSVFile(file);
+$("importBio").addEventListener("change", e => {
+  const f = e.target.files?.[0];
+  if (f) importBioCSVFile(f);
   e.target.value = "";
 });
 $("wipeAll").addEventListener("click", wipeAll);
 
-// Bio: salvar leve ao sair
-["bioWeight","bioWater","bioProtocol","bioNotes"].forEach(id=>{
-  $(id).addEventListener("blur", ()=> {
+// Marcar dirty ao editar bio
+["bioWeight", "bioWater", "bioProtocol", "bioNotes"].forEach(id => {
+  $(id).addEventListener("input", () => setDirty(true));
+  // Salvar leve ao sair do campo
+  $(id).addEventListener("blur", () => {
     state.db.bioByDate[state.dateISO] = {
       weight: numOrEmpty($("bioWeight").value),
       water: numOrEmpty($("bioWater").value),
@@ -1256,68 +1559,74 @@ $("wipeAll").addEventListener("click", wipeAll);
       notes: sanitizeText($("bioNotes").value || ""),
     };
     saveDB();
-    if(state.tab === "dashboard") renderDashboard();
+    setDirty(false);
+    if (state.tab === "dashboard") renderDashboard();
   });
 });
 
-// Dashboard nav month/week
-$("mPrev").addEventListener("click", ()=>{
-  const [y,m] = state.dashMonthISO.split("-").map(Number);
-  const d = new Date(y, m-2, 1);
-  state.dashMonthISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+// Dashboard nav
+$("mPrev").addEventListener("click", () => {
+  const [y, m] = state.dashMonthISO.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 2, 1));
+  state.dashMonthISO = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
   renderDashboard();
 });
-$("mNext").addEventListener("click", ()=>{
-  const [y,m] = state.dashMonthISO.split("-").map(Number);
-  const d = new Date(y, m, 1);
-  state.dashMonthISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+$("mNext").addEventListener("click", () => {
+  const [y, m] = state.dashMonthISO.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m, 1));
+  state.dashMonthISO = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
   renderDashboard();
 });
-$("wPrev").addEventListener("click", ()=>{
-  state.weekStartISO = addDays(state.weekStartISO, -7);
-  renderDashboard();
-});
-$("wNext").addEventListener("click", ()=>{
-  state.weekStartISO = addDays(state.weekStartISO, 7);
-  renderDashboard();
-});
+$("wPrev").addEventListener("click", () => { state.weekStartISO = addDays(state.weekStartISO, -7); renderDashboard(); });
+$("wNext").addEventListener("click", () => { state.weekStartISO = addDays(state.weekStartISO, 7); renderDashboard(); });
 
-// Modal picker
+// Modal
 $("exModalClose").addEventListener("click", closeExerciseModal);
 $("exCancel").addEventListener("click", closeExerciseModal);
-$("exSearch").addEventListener("input", (e)=> renderExerciseModalList(e.target.value));
-$("exAddNew").addEventListener("click", ()=>{
-  const name = prompt("Nome do exercício novo (ex: Supino Reto):");
-  if(!name) return;
-  const ex = name.trim();
-  if(!ex) return;
-  addExerciseByName(ex);
-  closeExerciseModal();
-  toast("Novo exercício adicionado.");
-});
-$("exModalOverlay").addEventListener("click", (e)=>{
-  if(e.target && e.target.id === "exModalOverlay") closeExerciseModal();
+$("exSearch").addEventListener("input", e => renderExerciseModalList(e.target.value));
+
+// Mostrar campo inline ao clicar em "+ Novo exercício"
+$("exAddNew").addEventListener("click", () => {
+  $("exNewRowToggle").style.display = "none";
+  const row = $("exNewRow");
+  row.style.display = "flex";
+  $("exNewInput").value = "";
+  setTimeout(() => $("exNewInput").focus(), 40);
 });
 
-/** ============================
- *  PWA: Service Worker
- *  ============================ */
+// Confirmar criação
+function confirmNewExercise() {
+  const name = $("exNewInput").value.trim();
+  if (!name) { $("exNewInput").focus(); return; }
+  addExerciseByName(name);
+  closeExerciseModal();
+  toast("Criado: " + name);
+}
+$("exNewConfirm").addEventListener("click", confirmNewExercise);
+$("exNewInput").addEventListener("keydown", e => { if (e.key === "Enter") confirmNewExercise(); });
+
+// Cancelar criação (volta aos botões)
+$("exNewCancel").addEventListener("click", () => {
+  $("exNewRow").style.display = "none";
+  $("exNewRowToggle").style.display = "flex";
+});
+$("exModalOverlay").addEventListener("click", e => {
+  if (e.target.id === "exModalOverlay") closeExerciseModal();
+});
+
+/* ─── PWA ─── */
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
-  });
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
 }
 
-/** ============================
- *  Init
- *  ============================ */
-(function init(){
-  state.dashMonthISO = state.dateISO.slice(0,7);
+/* ─── Init ─── */
+(function init() {
+  state.dashMonthISO = state.dateISO.slice(0, 7);
   state.weekStartISO = getMondayISO(state.dateISO);
-
   renderHeader();
   renderBio();
   renderWorkout();
+  renderTodayWorkoutSummary();
 })();
 </script>
 </body>
